@@ -1,0 +1,23 @@
+{
+  "name": "react-vue",
+  "version": "0.0.1",
+  "description": "react vue render",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vuejs/vue.git"
+  },
+  "keywords": [
+    "react",
+    "vue"
+  ],
+  "author": "Zhang Chuang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vuejs/vue/issues"
+  },
+  "homepage": "https://github.com/vuejs/vue/tree/dev/packages/vue-template-compiler#readme",
+  "dependencies": {
+    "react": "*"
+  }
+}

@@ -80,16 +80,19 @@ function initProps (vm: Component, propsOptions: Object) {
           vm
         )
       }
+      /**
+       * react-vue change
+       */
       defineReactive(props, key, value, () => {
-        if (vm.$parent && !observerState.isSettingProps) {
-          warn(
-            `Avoid mutating a prop directly since the value will be ` +
-            `overwritten whenever the parent component re-renders. ` +
-            `Instead, use a data or computed property based on the prop's ` +
-            `value. Prop being mutated: "${key}"`,
-            vm
-          )
-        }
+        // if (vm.$parent && !observerState.isSettingProps) {
+        //   warn(
+        //     `Avoid mutating a prop directly since the value will be ` +
+        //     `overwritten whenever the parent component re-renders. ` +
+        //     `Instead, use a data or computed property based on the prop's ` +
+        //     `value. Prop being mutated: "${key}"`,
+        //     vm
+        //   )
+        // }
       })
     } else {
       defineReactive(props, key, value)

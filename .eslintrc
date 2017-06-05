@@ -2,7 +2,7 @@
   "root": true,
   "parser": "babel-eslint",
   "extends": "vue",
-  "plugins": ["flowtype"],
+  "plugins": ["flowtype", "react"],
   "globals": {
     "__WEEX__": true
   },

@@ -234,9 +234,19 @@ export function parseHTML (html, options) {
         if (args[4] === '') { delete args[4] }
         if (args[5] === '') { delete args[5] }
       }
-      const value = args[3] || args[4] || args[5] || ''
+      let value = args[3] || args[4] || args[5] || ''
+      let name = args[1]
+      /**
+       * react-vue change
+       * <div autorun></div>
+       * {name: "autorun", value: """"} => {name: "autorun", value: "true"}
+       */
+      if (args[1].indexOf('v-') === -1 && args[2] === undefined) {
+        value = 'true'
+        name = ':' + name
+      }
       attrs[i] = {
-        name: args[1],
+        name: name,
         value: decodeAttr(
           value,
           options.shouldDecodeNewlines

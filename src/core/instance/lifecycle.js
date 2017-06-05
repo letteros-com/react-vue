@@ -6,7 +6,6 @@ import { mark, measure } from '../util/perf'
 import { createEmptyVNode } from '../vdom/vnode'
 import { observerState } from '../observer/index'
 import { updateComponentListeners } from './events'
-import { resolveSlots } from './render-helpers/resolve-slots'
 
 import {
   warn,
@@ -249,7 +248,6 @@ export function updateChildComponent (
   }
   // resolve slots + force update if has children
   if (hasChildren) {
-    vm.$slots = resolveSlots(renderChildren, parentVnode.context)
     vm.$forceUpdate()
   }
 }

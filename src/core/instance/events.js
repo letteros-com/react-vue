@@ -5,12 +5,21 @@ import { toArray, tip, hyphenate, formatComponentName } from '../util/index'
 
 export function initEvents (vm: Component) {
   vm._events = Object.create(null)
-  vm._hasHookEvent = false
-  // init parent attached events
-  const listeners = vm.$options._parentListeners
-  if (listeners) {
-    updateComponentListeners(vm, listeners)
+
+  /**
+   * react-vue change
+   */
+  if (Array.isArray(vm.$options.reactVueCustomEvent)) {
+    vm.$options.reactVueCustomEvent.forEach((v: any) => {
+      vm.$on(v.name, v.handle)
+    })
   }
+  // vm._hasHookEvent = false
+  // // init parent attached events
+  // const listeners = vm.$options._parentListeners
+  // if (listeners) {
+  //   updateComponentListeners(vm, listeners)
+  // }
 }
 
 let target: Component

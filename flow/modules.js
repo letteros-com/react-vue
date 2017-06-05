@@ -41,3 +41,9 @@ declare module 'lodash.template' {
     (input: string, options: { interpolate: RegExp, escape: RegExp }): Function
   }
 }
+
+declare module 'change-case' {
+  declare var exports: {
+    (): any
+  }
+}
