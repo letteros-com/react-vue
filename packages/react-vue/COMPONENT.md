@@ -1,15 +1,15 @@
 # Vue Component API
 
-With [react-vue-loader](), we can easily integrate the Vue component into the React component
+With [react-vue-loader](https://github.com/SmallComfort/react-vue-loader), we can easily integrate the Vue component into the React component
 
-> Vue component actually runs in the React runtime. It means, you can not access [VNode](https://vuejs.org/v2/api/#VNode-Interface), you can not use [Render](https://vuejs.org/v2/guide/render-function.html). Conversely, if your previous Vue component does not involve both things, it would most likely run directly in react-vue.
+> Vue component actually runs in the React runtime. It means, you can not access [VNode](https://vuejs.org/v2/api/#VNode-Interface), you can not use [Render](https://vuejs.org/v2/guide/render-function.html). Conversely, if your previous Vue component does not involve both things, it would most likely run directly in react-vue. [demo](https://github.com/SmallComfort/react-vue-material-demo)
 
 The following lists all Vue's API supported.
 
 ## Supported API
 
 #### Global Config
-> Use the react-vue-loader options: [```vue```]()
+> Use the react-vue-loader options: [```vue```](https://github.com/SmallComfort/react-vue-loader#additional-options)
 * [silent](https://vuejs.org/v2/api/#silent)
 
 * [optionMergeStrategies](https://vuejs.org/v2/api/#optionMergeStrategies)
@@ -18,14 +18,14 @@ The following lists all Vue's API supported.
 * [keyCodes](https://vuejs.org/v2/api/#keyCodes)
 
 #### Global API
-> Use the react-vue-loader options: [```vue```]()
+> Use the react-vue-loader options: [```vue```](https://github.com/SmallComfort/react-vue-loader#additional-options)
 * [Vue.extend](https://vuejs.org/v2/api/#Vue-extend)
 
 * [Vue.nextTick](https://vuejs.org/v2/api/#Vue-nextTick)
 * [Vue.set](https://vuejs.org/v2/api/#Vue-set)
 * [Vue.delete](https://vuejs.org/v2/api/#Vue-delete)
 * [Vue.directive](https://vuejs.org/v2/api/#Vue-directive)
-  > [partial support]()
+  > [partial support](https://github.com/SmallComfort/react-vue/blob/dev/packages/react-vue/COMPONENT.md#options--assets)
 * [Vue.component](https://vuejs.org/v2/api/#Vue-component)
 * [Vue.use](https://vuejs.org/v2/api/#Vue-use)
 * [Vue.mixin](https://vuejs.org/v2/api/#Vue-mixin)
