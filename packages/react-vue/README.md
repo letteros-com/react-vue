@@ -34,7 +34,7 @@ export default class Demo extends Component {
 ```
 As shown above, the data changes, the view updates. Most of your vue magic is still available in react, even if [Vuex](https://vuex.vuejs.org/).
 
-[demo]()
+[demo](https://github.com/SmallComfort/react-vue-demo)
 
 ## API
 
@@ -93,9 +93,9 @@ As shown above, the data changes, the view updates. Most of your vue magic is st
   ```@observer``` ([decorator](https://babeljs.io/docs/plugins/transform-decorators/)) is optional, ```observer(class Timer ... { })``` achieves exactly the same.
 
 ## Single File Components
-Since react-vue only contains vue's reactivity system, there is no lifecycle, no template. For the full support of SFC, try [react-vue-loader]().
+Since react-vue only contains vue's reactivity system, there is no lifecycle, no template. For the full support of SFC, try [react-vue-loader](https://github.com/SmallComfort/react-vue-loader).
 
-[document]()
+[document](https://github.com/SmallComfort/react-vue/blob/dev/packages/react-vue/COMPONENT.md)
 
 ## License
 
