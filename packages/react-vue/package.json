@@ -1,22 +1,22 @@
 {
   "name": "react-vue",
-  "version": "0.0.1",
-  "description": "react vue render",
+  "version": "0.0.2",
+  "description": "react vue",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vuejs/vue.git"
+    "url": "git+https://github.com/SmallComfort/react-vue"
   },
   "keywords": [
     "react",
     "vue"
   ],
-  "author": "Zhang Chuang",
+  "author": "ZC",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/vuejs/vue/issues"
+    "url": "https://github.com/SmallComfort/react-vue/issues"
   },
-  "homepage": "https://github.com/vuejs/vue/tree/dev/packages/vue-template-compiler#readme",
+  "homepage": "https://github.com/SmallComfort/react-vue/tree/dev/packages/react-vue-helper",
   "peerDependencies": {
     "react": "*"
   }
