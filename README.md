@@ -47,6 +47,7 @@ Introduce [react-vue-loader](https://github.com/SmallComfort/react-vue-loader), 
 
 ```
 npm install --save react-vue
+npm install --save react-vue-helper
 npm install --save-dev react-vue-loader
 ```
 
