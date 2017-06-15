@@ -40,10 +40,10 @@ export default class Demo extends Component {
   }
 }
 ```
-[document]() 
+[document](https://github.com/SmallComfort/react-vue/blob/dev/packages/react-vue/README.md) 
 
 ### Vue Component
-Introduce [react-vue-loader](), which compile the Vue component into a React component. As you might think, your previously written Vue components can run inside the React component, and your React components can also run inside the Vue component.
+Introduce [react-vue-loader](https://github.com/SmallComfort/react-vue-loader), which compile the Vue component into a React component. As you might think, your previously written Vue components can run inside the React component, and your React components can also run inside the Vue component.
 
 ```
 npm install --save react-vue
@@ -95,7 +95,7 @@ export default class Three extends Component {
 }
 ```
 
-[document]()
+[document](https://github.com/SmallComfort/react-vue/blob/dev/packages/react-vue/COMPONENT.md)
 
 ## License
 
