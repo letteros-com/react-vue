@@ -87,7 +87,8 @@ class RenderGenerator extends BaseGenerator {
 
     // for modifiers eg: @click.native
     if (ast.parent === undefined) {
-      props = `Object.assign({}, this.props.${HELPER_HEADER}nativeEvents, ${props})`
+      // props = `Object.assign({}, this.props.${HELPER_HEADER}nativeEvents, ${props})`
+      props = `${COMMON.mergeProps.name}.call(this, this.props.${HELPER_HEADER}nativeEvents, ${props})`
     }
 
     // for template $props eg: v-bind:$props

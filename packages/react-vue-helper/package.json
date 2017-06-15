@@ -20,7 +20,9 @@
   "dependencies": {
     "he": "^1.1.0",
     "de-indent": "^1.0.2",
-    "change-case":  "^3.0.1",
+    "change-case":  "^3.0.1"
+  },
+  "peerDependencies": {
     "react": "*"
   }
 }

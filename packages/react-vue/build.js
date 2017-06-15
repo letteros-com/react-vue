@@ -170,7 +170,7 @@ function toArray (list, start) {
 /**
  * Mix properties into target object.
  */
-function extend$1 (to, _from) {
+function extend (to, _from) {
   for (var key in _from) {
     to[key] = _from[key];
   }
@@ -1111,7 +1111,7 @@ LIFECYCLE_HOOKS.forEach(function (hook) {
 function mergeAssets (parentVal, childVal) {
   var res = Object.create(parentVal || null);
   return childVal
-    ? extend$1(res, childVal)
+    ? extend(res, childVal)
     : res
 }
 
@@ -1130,7 +1130,7 @@ strats.watch = function (parentVal, childVal) {
   if (!childVal) { return Object.create(parentVal || null) }
   if (!parentVal) { return childVal }
   var ret = {};
-  extend$1(ret, parentVal);
+  extend(ret, parentVal);
   for (var key in childVal) {
     var parent = ret[key];
     var child = childVal[key];
@@ -1153,8 +1153,8 @@ strats.computed = function (parentVal, childVal) {
   if (!childVal) { return Object.create(parentVal || null) }
   if (!parentVal) { return childVal }
   var ret = Object.create(null);
-  extend$1(ret, parentVal);
-  extend$1(ret, childVal);
+  extend(ret, parentVal);
+  extend(ret, childVal);
   return ret
 };
 
@@ -3531,7 +3531,7 @@ function resolveConstructorOptions (Ctor) {
       var modifiedOptions = resolveModifiedOptions(Ctor);
       // update base extend options
       if (modifiedOptions) {
-        extend$1(Ctor.extendOptions, modifiedOptions);
+        extend(Ctor.extendOptions, modifiedOptions);
       }
       options = Ctor.options = mergeOptions(superOptions, Ctor.extendOptions);
       if (options.name) {
@@ -3588,9 +3588,13 @@ function Vue$2 (options) {
   /**
    * react-vue change
    */
-  if (options.reactVueSlots) {
-    this.$slots = options.reactVueSlots;
-    delete options.reactVueSlots;
+  if (options) {
+    if (options.reactVueSlots) {
+      this.$slots = options.reactVueSlots;
+    }
+    if (options.reactVueForceUpdate) {
+      this.$forceUpdate = options.reactVueForceUpdate;
+    }
   }
   this._init(options);
 }
@@ -3610,6 +3614,10 @@ eventsMixin(Vue$2);
  */
 Vue$2.prototype.$nextTick = function (fn) {
   return nextTick(fn, this)
+};
+
+Vue$2.prototype.$destroy = function (fn) {
+  // nothing
 };
 
 /*  */
@@ -3717,7 +3725,7 @@ function initExtend (Vue) {
     // been updated.
     Sub.superOptions = Super.options;
     Sub.extendOptions = extendOptions;
-    Sub.sealedOptions = extend$1({}, Sub.options);
+    Sub.sealedOptions = extend({}, Sub.options);
 
     // cache constructor
     cachedCtors[SuperId] = Sub;
@@ -3769,6 +3777,19 @@ function initAssetRegisters (Vue) {
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition };
         }
+        /**
+         * react-vue change
+         */
+        if (type === 'component' && typeof definition === 'function') {
+          id = capitalize(camelize(id));
+          if (definition.name) {
+            var _id = capitalize(camelize(definition.name));
+            if (_id !== id) {
+              this.options[type + 's'][_id] = definition;
+            }
+          }
+        }
+
         this.options[type + 's'][id] = definition;
         return definition
       }
@@ -3897,7 +3918,7 @@ function initGlobalAPI (Vue) {
   // them unless you are aware of the risk.
   Vue.util = {
     warn: warn,
-    extend: extend$1,
+    extend: extend,
     mergeOptions: mergeOptions,
     defineReactive: defineReactive$$1
   };
@@ -3915,7 +3936,7 @@ function initGlobalAPI (Vue) {
   // components with in Weex's multi-instance scenarios.
   Vue.options._base = Vue;
 
-  extend$1(Vue.options.components, builtInComponents);
+  extend(Vue.options.components, builtInComponents);
 
   initUse(Vue);
   initMixin$1(Vue);
@@ -4002,11 +4023,28 @@ function patch (target, funcName) {
   };
 }
 
+/* Is it really necessary ?
+function isObjectShallowModified (prev, next) {
+  if (prev == null || next == null || typeof prev !== 'object' || typeof next !== 'object') {
+    return prev !== next
+  }
+  const keys = Object.keys(prev)
+  if (keys.length !== Object.keys(next).length) {
+    return true
+  }
+  let key
+  for (let i = keys.length - 1; i >= 0; i--) {
+    key = keys[i]
+    if (next[key] !== prev[key]) {
+      return true
+    }
+  }
+  return false
+}
+*/
+
 /**  */
 
 Vue$2.observer = observer;
-
-var extend = Vue$2.extend;
-Vue$2.extend = function (c) { return extend.call(Vue$2, c.options); };
 
 module.exports = Vue$2;

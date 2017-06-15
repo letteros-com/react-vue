@@ -33,37 +33,17 @@ const resolve = p => {
 }
 
 const builds = {
-  'common-observer': {
-    entry: resolve('src/platforms/react-vue/index.js'),
-    dest: resolve('dist/vue.react.js'),
-    format: 'es',
-    external: ['he']
-  },
-  'common-observer-prod': {
-    entry: resolve('src/platforms/react-vue/index.js'),
-    dest: resolve('dist/vue.react.min.js'),
-    format: 'umd',
-    env: 'production',
-    external: ['he']
-  },
-  'template-parser': {
-    entry: resolve('src/compiler/parser/index.js'),
-    dest: resolve('dist/vue.template.parser.js'),
-    format: 'cjs',
-    external: ['he'],
-    banner
-  },
   'react-vue': {
     entry: resolve('react-vue/index.js'),
     dest: resolve('packages/react-vue/build.js'),
     format: 'cjs',
-    external: Object.keys(require('../packages/react-vue-helper/package.json').dependencies)
+    external: ['react']
   },
   'react-vue-helper': {
     entry: resolve('react-vue/runtime/helpers.js'),
     dest: resolve('packages/react-vue-helper/build.js'),
     format: 'cjs',
-    external: Object.keys(require('../packages/react-vue-helper/package.json').dependencies)
+    external: ['react', 'change-case', 'he', 'de-indent']
   },
   'react-vue-template-compiler': {
     entry: resolve('react-vue/compiler.js'),

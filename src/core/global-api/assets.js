@@ -2,7 +2,7 @@
 
 import config from '../config'
 import { ASSET_TYPES } from 'shared/constants'
-import { warn, isPlainObject } from '../util/index'
+import { warn, isPlainObject, camelize, capitalize } from '../util/index'
 
 export function initAssetRegisters (Vue: GlobalAPI) {
   /**
@@ -32,6 +32,19 @@ export function initAssetRegisters (Vue: GlobalAPI) {
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition }
         }
+        /**
+         * react-vue change
+         */
+        if (type === 'component' && typeof definition === 'function') {
+          id = capitalize(camelize(id))
+          if (definition.name) {
+            const _id = capitalize(camelize(definition.name))
+            if (_id !== id) {
+              this.options[type + 's'][_id] = definition
+            }
+          }
+        }
+
         this.options[type + 's'][id] = definition
         return definition
       }

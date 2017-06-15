@@ -61,3 +61,23 @@ function patch (target, funcName) {
     base.apply(this, arguments)
   }
 }
+
+/* Is it really necessary ?
+function isObjectShallowModified (prev, next) {
+  if (prev == null || next == null || typeof prev !== 'object' || typeof next !== 'object') {
+    return prev !== next
+  }
+  const keys = Object.keys(prev)
+  if (keys.length !== Object.keys(next).length) {
+    return true
+  }
+  let key
+  for (let i = keys.length - 1; i >= 0; i--) {
+    key = keys[i]
+    if (next[key] !== prev[key]) {
+      return true
+    }
+  }
+  return false
+}
+*/

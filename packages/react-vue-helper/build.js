@@ -283,10 +283,6 @@ function def (obj, key, val, enumerable) {
   });
 }
 
-/**
- * Parse simple path.
- */
-
 var ASSET_TYPES = [
   'component',
   'directive',
@@ -499,6 +495,7 @@ function handleError (err, vm, info) {
 /*  */
 /* globals MutationObserver */
 
+// can we use __proto__?
 var hasProto = '__proto__' in {};
 
 // Browser environment sniffing
@@ -701,6 +698,9 @@ Dep.prototype.notify = function notify () {
   }
 };
 
+// the current target watcher being evaluated.
+// this is globally unique because there could be only one
+// watcher being evaluated at any time.
 Dep.target = null;
 
 /*
@@ -972,6 +972,11 @@ function dependArray (value) {
 
 /*  */
 
+/**
+ * Option overwriting strategies are functions that handle
+ * how to merge a parent option value and a child option
+ * value into the final value.
+ */
 var strats = config.optionMergeStrategies;
 
 /**
@@ -1150,7 +1155,8 @@ var defaultStrat = function (parentVal, childVal) {
 };
 
 /**
- * Validate component names
+ * Merge two option objects into a new one.
+ * Core utility used in both instantiation and inheritance.
  */
 
 
@@ -1188,12 +1194,6 @@ function resolveAsset (
 }
 
 /*  */
-
-
-
-/**
- * Get the default value of a prop.
- */
 
 function setSelected (el, binding, vm) {
   var value = binding.value;
@@ -1273,6 +1273,9 @@ var index = {
 
 /*  */
 
+/**
+ * Runtime helper for rendering v-for lists.
+ */
 function renderList (
   val,
   render
@@ -1376,6 +1379,10 @@ var COMMON = {
   'handleProps': {
     name: (HELPER_HEADER + "handleProps"),
     alias: 'handleProps'
+  },
+  'mergeProps': {
+    name: (HELPER_HEADER + "mergeProps"),
+    alias: 'mergeProps'
   }
 };
 
@@ -1527,16 +1534,22 @@ function bindWebStyle (styleBinding, staticStyle, showStyle) {
 }
 
 /*  */
-
 /**
  * Runtime helper for checking keyCodes.
  */
 function checkKeyCodes (
+  vm,
   eventKeyCode,
   key,
   builtInAlias
 ) {
-  var keyCodes = builtInAlias;
+  var configKeyCodes = {};
+  try {
+    configKeyCodes = vm.$options._base.config.keyCodes;
+  } catch (e) {
+    warn('react-vue checkKeyCodes vm.$options._base.config.keyCodes catch error');
+  }
+  var keyCodes = configKeyCodes[key] || builtInAlias;
   if (Array.isArray(keyCodes)) {
     return keyCodes.indexOf(eventKeyCode) === -1
   } else {
@@ -1598,6 +1611,11 @@ function isObjectShallowModified (prev, next) {
   return false
 }
 
+var hasOwnProperty$1 = Object.prototype.hasOwnProperty;
+function hasOwn$1 (obj, key) {
+  return hasOwnProperty$1.call(obj, key)
+}
+
 function mergeCssModule$1 (computed, cssModules) {
   var _computed = Object.create(computed || null);
   Object.keys(cssModules).forEach(function (key) {
@@ -1615,18 +1633,24 @@ function pascalCaseTag (tag) {
  * for options {components}
  * @param {Object} components
  */
-function pascalCaseComponentTag (components) {
-  var pascalCaseComponent = {};
-  for (var tag in components) {
-    pascalCaseComponent[pascalCaseTag(tag)] = components[tag];
+
+function handleComponents (components) {
+  for (var k in components) {
+    if (hasOwn$1(components, k)) {
+      components[pascalCaseTag(k)] = components[k];
+      var c = components[k];
+      if (c.name) {
+        components[pascalCaseTag(c.name)] = components[k];
+      }
+    }
   }
-  return pascalCaseComponent
+  return components
 }
 
 function handleDirectives (directives) {
   var obj = {};
   for (var k in directives) {
-    obj[k.toLowerCase()] = directives[k];
+    obj[k.toLowerCase().replace(/[^a-z]/g, '')] = directives[k];
   }
   return obj
 }
@@ -1676,181 +1700,6 @@ function filterCustomEvent (props) {
   })
 }
 
-function buildComponent (render, options, config) {
-  var Component = config.Component;
-  var PropTypes = config.PropTypes;
-  var Vue = config.Vue;
-  var cssModules = config.cssModules;
-  var VueConfiger = config.VueConfiger;
-  Object.assign(Vue, VueConfiger);
-  if (cssModules) {
-    options.computed = mergeCssModule$1(options.computed, cssModules);
-  }
-  var ReactVueComponent = (function (Component) {
-    function ReactVueComponent (props) {
-      Component.call(this, props);
-      this._ref = null;
-      this.eventOnceUid = [];
-      this.newDirectiveData = {};
-      this.oldDirectiveData = {};
-      this.vm = {};
-      this.beforeMount = [];
-      this.mounted = [];
-      this.beforeUpdate = [];
-      this.updated = [];
-      this.beforeDestroy = [];
-    }
-
-    if ( Component ) ReactVueComponent.__proto__ = Component;
-    ReactVueComponent.prototype = Object.create( Component && Component.prototype );
-    ReactVueComponent.prototype.constructor = ReactVueComponent;
-
-    /**
-     * children can access parent instance by 'this.context.owner'
-     */
-    ReactVueComponent.prototype.getChildContext = function getChildContext () {
-      return {
-        owner: this
-      }
-    };
-
-    /**
-     * for event modifiers v-on:xxx.once
-     */
-    ReactVueComponent.prototype.setEventOnce = function setEventOnce (fn) {
-      var this$1 = this;
-
-      var name = fn.name;
-      return function (event) {
-        if (this$1.eventOnceUid.indexOf(name) === -1) {
-          this$1.eventOnceUid.push(name);
-          fn(event);
-        }
-      }
-    };
-
-    /**
-     * for custom directive v-xxx
-     */
-    // setDirective (directive) {
-    //   directive.forEach((v) => {
-    //     this.newDirectiveData[v.uid] = Object.assign({}, v, { directive })
-    //   })
-    // }
-
-    ReactVueComponent.prototype.setRootRef = function setRootRef (ref) {
-      if (ref) {
-        ref = ref._ref || ref;
-        this._ref = ref;
-        this.vm.$el = this._ref;
-      }
-    };
-
-    ReactVueComponent.prototype.setRef = function setRef (ref, text, inFor) {
-      if (ref) {
-        // for buildin component, we set ref to his hold node directly
-        // it means the buildin componet would be the end of $refs chain
-        ref = ref.vm || ref._ref || ref;
-        if (inFor === true) {
-          if (!this.vm.$refs[text]) {
-            this.vm.$refs[text] = [];
-          }
-          this.vm.$refs[text].push(ref);
-        } else {
-          this.vm.$refs[text] = ref;
-        }
-        this.$refs = this.vm.$refs;
-      }
-    };
-
-    ReactVueComponent.prototype.buildVM = function buildVM (options) {
-      render._withStripped = true;
-
-      Object.assign(options, {
-        render: render,
-        propsData: this.props,
-        parent: this.context.owner ? this.context.owner.vm : undefined,
-        reactVueSlots: getSlots(this.props.children),
-        reactVueCustomEvent: filterCustomEvent(this.props)
-      });
-      var vm = new Vue(options);
-
-      vm.$options.components = pascalCaseComponentTag(vm.$options.components);
-      for (var k in vm.$options.components) {
-        var name = vm.$options.components[k].name;
-        if (name) {
-          vm.$options.components[name] = vm.$options.components[k];
-        }
-      }
-
-      vm.$options.directives = handleDirectives(vm.$options.directives);
-
-      return vm
-    };
-
-    ReactVueComponent.prototype.componentWillMount = function componentWillMount () {
-      var this$1 = this;
-
-      this.vm = this.buildVM(options);
-
-      this.beforeMount = this.vm.$options.beforeMount || [];
-      this.mounted = this.vm.$options.mounted || [];
-      this.beforeUpdate = this.vm.$options.beforeUpdate || [];
-      this.updated = this.vm.$options.updated || [];
-      this.beforeDestroy = this.vm.$options.beforeDestroy || [];
-
-      this.beforeMount.forEach(function (v) { return v.call(this$1.vm); });
-    };
-
-    ReactVueComponent.prototype.componentDidMount = function componentDidMount () {
-      var this$1 = this;
-
-      // triggerDirective(this.newDirectiveData, this.oldDirectiveData, this.vm)
-      this.mounted.forEach(function (v) { return v.call(this$1.vm); });
-    };
-    ReactVueComponent.prototype.componentWillUpdate = function componentWillUpdate () {
-      var this$1 = this;
-
-      // this.oldDirectiveData = this.newDirectiveData
-      // this.newDirectiveData = {}
-      this.beforeUpdate.forEach(function (v) { return v.call(this$1.vm); });
-    };
-    ReactVueComponent.prototype.componentDidUpdate = function componentDidUpdate () {
-      var this$1 = this;
-
-      // triggerDirective(this.newDirectiveData, this.oldDirectiveData, this.vm)
-      this.updated.forEach(function (v) { return v.call(this$1.vm); });
-    };
-    ReactVueComponent.prototype.componentWillUnmount = function componentWillUnmount () {
-      var this$1 = this;
-
-      this.beforeDestroy.forEach(function (v) { return v.call(this$1.vm); });
-    };
-    ReactVueComponent.prototype.componentWillReceiveProps = function componentWillReceiveProps (nextProps) {
-      this.vm._props && Object.assign(this.vm._props, nextProps);
-      this.vm.$slots = getSlots(nextProps.children);
-    };
-    ReactVueComponent.prototype.shouldComponentUpdate = function shouldComponentUpdate (nextProps) {
-      return isObjectShallowModified(this.props, nextProps)
-    };
-    ReactVueComponent.prototype.render = function render$1 () {
-      return render ? render.call(this, this.vm._renderProxy) : null
-    };
-
-    return ReactVueComponent;
-  }(Component));
-  ReactVueComponent.childContextTypes = {
-    owner: PropTypes.object
-  };
-  ReactVueComponent.contextTypes = {
-    owner: PropTypes.object
-  };
-
-  ReactVueComponent.options = options;
-
-  return ReactVueComponent
-}
-
 function dynamicComponent (vm, name) {
   var componentName;
   if (typeof name === 'string') {
@@ -1863,6 +1712,9 @@ function dynamicComponent (vm, name) {
 
 /*  */
 
+/**
+ * Runtime helper for resolving filters
+ */
 function resolveFilter (id) {
   return resolveAsset(this.$options, 'filters', id, true) || identity
 }
@@ -2582,8 +2434,8 @@ Object.keys(HTMLDOMPropertyConfig.Properties).forEach(function (v) {
   propertyMap[v.toLowerCase()] = v;
 });
 
-Object.keys(SVGDOMPropertyConfig.Properties).forEach(function (v) {
-  propertyMap[v.toLowerCase()] = v;
+Object.keys(SVGDOMPropertyConfig.DOMAttributeNames).forEach(function (v) {
+  propertyMap[SVGDOMPropertyConfig.DOMAttributeNames[v]] = v;
 });
 
 Object.keys(EventConstants.topLevelTypes).map(function (v) {
@@ -2598,6 +2450,8 @@ Object.keys(reactProps).map(function (v) {
 
 /*  */
 
+// these are reserved for web because they are directly compiled away
+// during template compilation
 var isReservedAttr = makeMap('style,class');
 
 // attributes that should be using props for binding
@@ -2698,9 +2552,220 @@ function handleProps (props, tag) {
   return handledProps
 }
 
+function mergeProps () {
+  var this$1 = this;
+
+  var args = Array.prototype.slice.call(arguments, 0).filter(function (v) { return v; });
+  var obj = {};
+  args.forEach(function (o) {
+    Object.keys(o).forEach(function (k) {
+      if (!obj[k]) {
+        obj[k] = [];
+      }
+      obj[k].push(o[k]);
+    });
+  });
+  var loop = function ( k ) {
+    var l = obj[k].length;
+    if (l === 1) {
+      obj[k] = obj[k][0];
+    } else if (l > 1) {
+      var _p = obj[k];
+      if (typeof _p[0] === 'function') {
+        obj[k] = function () {
+          var arguments$1 = arguments;
+          var this$1 = this;
+
+          for (var i = 0; i < l; i++) {
+            typeof _p[i] === 'function' && _p[i].apply(this$1, arguments$1);
+          }
+        }.bind(this$1);
+      } else {
+        obj[k] = obj[k][l - 1];
+      }
+    }
+  };
+
+  for (var k in obj) loop( k );
+  return obj
+}
+
 /**
  * 
  */
+
+function buildComponent (render, options, config) {
+  var Component = config.Component;
+  var PropTypes = config.PropTypes;
+  var Vue = config.Vue;
+  var cssModules = config.cssModules;
+  if (cssModules) {
+    options.computed = mergeCssModule$1(options.computed, cssModules);
+  }
+  var ReactVueComponent = (function (Component) {
+    function ReactVueComponent (props) {
+      Component.call(this, props);
+      this._ref = null;
+      this.eventOnceUid = [];
+      this.newDirectiveData = {};
+      this.oldDirectiveData = {};
+      this.vm = {};
+      this.beforeMount = [];
+      this.mounted = [];
+      this.beforeUpdate = [];
+      this.updated = [];
+      this.beforeDestroy = [];
+    }
+
+    if ( Component ) ReactVueComponent.__proto__ = Component;
+    ReactVueComponent.prototype = Object.create( Component && Component.prototype );
+    ReactVueComponent.prototype.constructor = ReactVueComponent;
+
+    /**
+     * children can access parent instance by 'this.context.owner'
+     */
+    ReactVueComponent.prototype.getChildContext = function getChildContext () {
+      return {
+        owner: this
+      }
+    };
+
+    /**
+     * for event modifiers v-on:xxx.once
+     */
+    ReactVueComponent.prototype.setEventOnce = function setEventOnce (fn) {
+      var this$1 = this;
+
+      var name = fn.name;
+      return function (event) {
+        if (this$1.eventOnceUid.indexOf(name) === -1) {
+          this$1.eventOnceUid.push(name);
+          fn(event);
+        }
+      }
+    };
+
+    ReactVueComponent.prototype.setRootRef = function setRootRef (ref) {
+      if (ref) {
+        ref = ref._ref || ref;
+        this._ref = ref;
+        this.vm.$el = this._ref;
+      }
+    };
+
+    ReactVueComponent.prototype.setRef = function setRef (ref, text, inFor) {
+      if (ref) {
+        // for buildin component, we set ref to his hold node directly
+        // it means the buildin componet would be the end of $refs chain
+        ref = ref.vm || ref._ref || ref;
+        if (inFor === true) {
+          if (!this.vm.$refs[text]) {
+            this.vm.$refs[text] = [];
+          }
+          this.vm.$refs[text].push(ref);
+        } else {
+          this.vm.$refs[text] = ref;
+        }
+        this.$refs = this.vm.$refs;
+      }
+    };
+
+    ReactVueComponent.prototype.buildVM = function buildVM (options) {
+      // set this property to prevent runtime error in vue
+      render._withStripped = true;
+
+      var vueOptions = {
+        render: render,
+        propsData: this.props,
+        parent: this.context.owner ? this.context.owner.vm : undefined
+      };
+
+      var reactVueOptions = {
+        reactVueSlots: getSlots(this.props.children),
+        reactVueForceUpdate: this.forceUpdate.bind(this),
+        reactVueCustomEvent: filterCustomEvent(this.props)
+      };
+
+      Object.assign(options, vueOptions, reactVueOptions);
+
+      var vm = new Vue(options);
+
+      vm.$options.directives = handleDirectives(vm.$options.directives);
+      vm.$options.components = handleComponents(vm.$options.components);
+
+      /**
+       * for ignoredElements
+       */
+      Vue.config.ignoredElements.forEach(function (name) {
+        var _name = pascalCaseTag(name);
+        if (vm.$options.components[_name] === undefined) {
+          vm.$options.components[_name] = name;
+        }
+      });
+
+      return vm
+    };
+
+    ReactVueComponent.prototype.componentWillMount = function componentWillMount () {
+      var this$1 = this;
+
+      this.vm = this.buildVM(options);
+
+      this.beforeMount = this.vm.$options.beforeMount || [];
+      this.mounted = this.vm.$options.mounted || [];
+      this.beforeUpdate = this.vm.$options.beforeUpdate || [];
+      this.updated = this.vm.$options.updated || [];
+      this.beforeDestroy = this.vm.$options.beforeDestroy || [];
+
+      this.beforeMount.forEach(function (v) { return v.call(this$1.vm); });
+    };
+
+    ReactVueComponent.prototype.componentDidMount = function componentDidMount () {
+      var this$1 = this;
+
+      setTimeout(function () {
+        this$1.mounted.forEach(function (v) { return v.call(this$1.vm); });
+      }, 0);
+    };
+    ReactVueComponent.prototype.componentWillUpdate = function componentWillUpdate () {
+      var this$1 = this;
+
+      this.beforeUpdate.forEach(function (v) { return v.call(this$1.vm); });
+    };
+    ReactVueComponent.prototype.componentDidUpdate = function componentDidUpdate () {
+      var this$1 = this;
+
+      this.updated.forEach(function (v) { return v.call(this$1.vm); });
+    };
+    ReactVueComponent.prototype.componentWillUnmount = function componentWillUnmount () {
+      var this$1 = this;
+
+      this.beforeDestroy.forEach(function (v) { return v.call(this$1.vm); });
+    };
+    ReactVueComponent.prototype.componentWillReceiveProps = function componentWillReceiveProps (nextProps) {
+      this.vm._props && Object.assign(this.vm._props, nextProps);
+      this.vm.$slots = getSlots(nextProps.children);
+    };
+    ReactVueComponent.prototype.shouldComponentUpdate = function shouldComponentUpdate (nextProps) {
+      return isObjectShallowModified(this.props, nextProps)
+    };
+    ReactVueComponent.prototype.render = function render$1 () {
+      return render ? render.call(this, this.vm._renderProxy) : null
+    };
+
+    return ReactVueComponent;
+  }(Component));
+  ReactVueComponent.childContextTypes = {
+    owner: PropTypes.object
+  };
+  ReactVueComponent.contextTypes = {
+    owner: PropTypes.object
+  };
+
+  ReactVueComponent.options = options;
+
+  return ReactVueComponent
+}
 
 function buildMixin (Component) {
   return (function (Component) {
@@ -2747,7 +2812,7 @@ function buildMixin (Component) {
   }(Component))
 }
 
-function triggerDirective$1 (newData, oldData, vm, ref) {
+function triggerDirective (newData, oldData, vm, ref) {
   var directive, binding, args;
 
   var vnode = {
@@ -2844,15 +2909,15 @@ function buildDirective (Component, createElement) {
             if (newDirective.name === oldDirective.name) {
               newDirectivesClone.splice(newIndex, 1, undefined);
               oldDirectivesClone.splice(oldIndex, 1, undefined);
-              triggerDirective$1(newDirective, oldDirective, context.vm, this$1._ref); // update
+              triggerDirective(newDirective, oldDirective, context.vm, this$1._ref); // update
             }
           });
         });
         newDirectivesClone.forEach(function (v) { // bind
-          v && triggerDirective$1(v, null, context.vm, this$1._ref);
+          v && triggerDirective(v, null, context.vm, this$1._ref);
         });
         oldDirectivesClone.forEach(function (v) { // unbind
-          v && triggerDirective$1(null, v, context.vm, this$1._ref);
+          v && triggerDirective(null, v, context.vm, this$1._ref);
         });
       }
     };
@@ -3190,6 +3255,10 @@ function buildWebEmptyComponent (Component, createElement) {
     return EmptyComponent;
   }(Component))
 }
+
+// import {
+//   isObjectShallowModified
+// } from './util'
 
 function filterCollection (collection) {
   var result = [];
@@ -3788,6 +3857,7 @@ exports.mergeCssModule = mergeCssModule;
 exports.dynamicComponent = dynamicComponent;
 exports.resolveFilter = resolveFilter;
 exports.handleProps = handleProps;
+exports.mergeProps = mergeProps;
 exports.isUndef = isUndef;
 exports.isDef = isDef;
 exports.isTrue = isTrue;

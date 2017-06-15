@@ -78,6 +78,10 @@ const COMMON = {
   'handleProps': {
     name: `${HELPER_HEADER}handleProps`,
     alias: 'handleProps'
+  },
+  'mergeProps': {
+    name: `${HELPER_HEADER}mergeProps`,
+    alias: 'mergeProps'
   }
 }
 

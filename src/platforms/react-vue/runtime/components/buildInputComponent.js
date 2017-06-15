@@ -10,7 +10,6 @@ import {
   handleProps
 } from '../render-helpers/handleProps'
 
-
 export function buildInputComponent (Component, createElement) {
   return class Input extends buildMixin.apply(this, arguments) {
     constructor (props) {

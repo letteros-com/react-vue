@@ -1,6 +1,6 @@
 import {
   pascalCaseTag
-} from '../components/buildComponent.js'
+} from '../components/util.js'
 
 export function dynamicComponent (vm, name) {
   let componentName

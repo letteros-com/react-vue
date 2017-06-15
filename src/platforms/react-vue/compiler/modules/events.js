@@ -226,7 +226,7 @@ function genFilterCode (key) {
     return `$event.keyCode!==${keyVal}`
   }
   const alias = keyCodes[key]
-  return `${COMMON.checkKeyCodes.name}($event.keyCode,${JSON.stringify(key)}${alias ? ',' + JSON.stringify(alias) : ''})`
+  return `${COMMON.checkKeyCodes.name}(vm, $event.keyCode,${JSON.stringify(key)}${alias ? ',' + JSON.stringify(alias) : ''})`
 }
 
 export {

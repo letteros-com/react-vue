@@ -1,5 +1,8 @@
-import changeCase from 'change-case'
 import { baseWarn } from 'compiler/helpers'
+import {
+  camelize,
+  capitalize
+} from 'shared/util'
 import RenderGenerator from './RenderGenerator'
 import {
   WEB
@@ -35,7 +38,7 @@ class ReactWebRenderGenerator extends RenderGenerator {
     } else if (isBuildInTag(tag)) {
       tag = `${tag}`
     } else {
-      tag = `vm.$options.components['${changeCase.pascalCase(tag)}']`
+      tag = `vm.$options.components['${capitalize(camelize(tag))}']`
     }
 
     return tag

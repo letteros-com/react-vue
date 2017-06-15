@@ -14,8 +14,8 @@ Object.keys(HTMLDOMPropertyConfig.Properties).forEach(v => {
   propertyMap[v.toLowerCase()] = v
 })
 
-Object.keys(SVGDOMPropertyConfig.Properties).forEach(v => {
-  propertyMap[v.toLowerCase()] = v
+Object.keys(SVGDOMPropertyConfig.DOMAttributeNames).forEach(v => {
+  propertyMap[SVGDOMPropertyConfig.DOMAttributeNames[v]] = v
 })
 
 Object.keys(EventConstant.topLevelTypes).map(v => {

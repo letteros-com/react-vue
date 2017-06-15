@@ -19,9 +19,13 @@ function Vue (options) {
   /**
    * react-vue change
    */
-  if (options.reactVueSlots) {
-    this.$slots = options.reactVueSlots
-    delete options.reactVueSlots
+  if (options) {
+    if (options.reactVueSlots) {
+      this.$slots = options.reactVueSlots
+    }
+    if (options.reactVueForceUpdate) {
+      this.$forceUpdate = options.reactVueForceUpdate
+    }
   }
   this._init(options)
 }
@@ -41,6 +45,10 @@ eventsMixin(Vue)
  */
 Vue.prototype.$nextTick = function (fn) {
   return nextTick(fn, this)
+}
+
+Vue.prototype.$destroy = function (fn) {
+  // nothing
 }
 
 export default Vue

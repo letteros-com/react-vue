@@ -30,10 +30,6 @@ var changeCase = _interopDefault(require('change-case'));
  */
 
 
-/**
- * Strict object type check. Only returns true
- * for plain JavaScript objects.
- */
 
 
 /**
@@ -75,9 +71,6 @@ var isBuiltInTag = makeMap('slot,component', true);
  */
 
 
-/**
- * Check whether the object has the property.
- */
 
 
 /**
@@ -102,11 +95,10 @@ var camelize = cached(function (str) {
 /**
  * Capitalize a string.
  */
+var capitalize = cached(function (str) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+});
 
-
-/**
- * Hyphenate a camelCase string.
- */
 
 
 /**
@@ -195,6 +187,7 @@ var isNonPhrasingTag = makeMap(
  * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
  */
 
+// Regular Expressions for parsing tags and attributes
 var singleAttrIdentifier = /([^\s"'<>/=]+)/;
 var singleAttrAssign = /(?:=)/;
 var singleAttrValues = [
@@ -1072,6 +1065,7 @@ function handleError (err, vm, info) {
 /*  */
 /* globals MutationObserver */
 
+// can we use __proto__?
 
 
 // Browser environment sniffing
@@ -2002,6 +1996,10 @@ var COMMON = {
   'handleProps': {
     name: (HELPER_HEADER + "handleProps"),
     alias: 'handleProps'
+  },
+  'mergeProps': {
+    name: (HELPER_HEADER + "mergeProps"),
+    alias: 'mergeProps'
   }
 };
 
@@ -2044,6 +2042,8 @@ var NATIVE = {};
 
 /*  */
 
+// these are reserved for web because they are directly compiled away
+// during template compilation
 var isReservedAttr = makeMap('style,class');
 
 // attributes that should be using props for binding
@@ -3114,8 +3114,8 @@ Object.keys(HTMLDOMPropertyConfig.Properties).forEach(function (v) {
   propertyMap[v.toLowerCase()] = v;
 });
 
-Object.keys(SVGDOMPropertyConfig.Properties).forEach(function (v) {
-  propertyMap[v.toLowerCase()] = v;
+Object.keys(SVGDOMPropertyConfig.DOMAttributeNames).forEach(function (v) {
+  propertyMap[SVGDOMPropertyConfig.DOMAttributeNames[v]] = v;
 });
 
 Object.keys(EventConstants.topLevelTypes).map(function (v) {
@@ -3203,7 +3203,8 @@ var RenderGenerator = (function (BaseGenerator$$1) {
 
     // for modifiers eg: @click.native
     if (ast.parent === undefined) {
-      props = "Object.assign({}, this.props." + HELPER_HEADER + "nativeEvents, " + props + ")";
+      // props = `Object.assign({}, this.props.${HELPER_HEADER}nativeEvents, ${props})`
+      props = (COMMON.mergeProps.name) + ".call(this, this.props." + HELPER_HEADER + "nativeEvents, " + props + ")";
     }
 
     // for template $props eg: v-bind:$props
@@ -3768,7 +3769,7 @@ function genFilterCode (key) {
     return ("$event.keyCode!==" + keyVal)
   }
   var alias = keyCodes[key];
-  return ((COMMON.checkKeyCodes.name) + "($event.keyCode," + (JSON.stringify(key)) + (alias ? ',' + JSON.stringify(alias) : '') + ")")
+  return ((COMMON.checkKeyCodes.name) + "(vm, $event.keyCode," + (JSON.stringify(key)) + (alias ? ',' + JSON.stringify(alias) : '') + ")")
 }
 
 function parseStyleText (cssText) {
@@ -3785,6 +3786,9 @@ function parseStyleText (cssText) {
 }
 
 /*  */
+
+// in some cases, the event used has to be determined at runtime
+// so we used some reserved tokens during compile.
 
 function model (
   el,
@@ -4008,7 +4012,7 @@ var ReactWebRenderGenerator = (function (RenderGenerator$$1) {
     } else if (isBuildInTag(tag)) {
       tag = "" + tag;
     } else {
-      tag = "vm.$options.components['" + (changeCase.pascalCase(tag)) + "']";
+      tag = "vm.$options.components['" + (capitalize(camelize(tag))) + "']";
     }
 
     return tag
@@ -4291,6 +4295,10 @@ var ReactWebRenderGenerator = (function (RenderGenerator$$1) {
 
   return ReactWebRenderGenerator;
 }(RenderGenerator));
+
+// import {
+//   handleUnaryTag
+// } from './helpers'
 
 var baseOptions = {
   expectHTML: true,
