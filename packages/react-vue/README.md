@@ -28,7 +28,7 @@ const store = new Vue({
 @observer
 export default class Demo extends Component {
   render () {
-    return <div onClick={store.increase}>{store.count}</div>;
+    return <h1 onClick={store.increase}>{store.count}</h1>;
   }
 }
 ```
