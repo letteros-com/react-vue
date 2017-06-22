@@ -2,7 +2,7 @@
 > Vue component actually runs in the React runtime. It means, you can not access [VNode](https://vuejs.org/v2/api/#VNode-Interface), you can not use [Render](https://vuejs.org/v2/guide/render-function.html). Conversely, if your previous Vue component does not involve both things, it would most likely run directly in react-vue. 
 
 * web: [react-vue-loader](https://github.com/SmallComfort/react-vue-loader) ([demo](https://github.com/SmallComfort/react-vue-material-demo))
-* native: [react-vue-native-scripts]() ([demo]())
+* native: [react-vue-native-scripts](https://github.com/SmallComfort/react-vue-native-scripts) ([demo](https://github.com/SmallComfort/HackerNews))
 
 ## Supported API
 
