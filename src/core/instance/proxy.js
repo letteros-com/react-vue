@@ -10,7 +10,7 @@ if (process.env.NODE_ENV !== 'production') {
     'Infinity,undefined,NaN,isFinite,isNaN,' +
     'parseFloat,parseInt,decodeURI,decodeURIComponent,encodeURI,encodeURIComponent,' +
     'Math,Number,Date,Array,Object,Boolean,String,RegExp,Map,Set,JSON,Intl,' +
-    'require' // for Webpack/Browserify
+    'require, toJSON' // for Webpack/Browserify
   )
 
   const warnNonPresent = (target, key) => {
@@ -54,7 +54,8 @@ if (process.env.NODE_ENV !== 'production') {
 
   const getHandler = {
     get (target, key) {
-      if (typeof key === 'string' && !(key in target)) {
+      // react-vue change ```key === 'toJSON'``` prevent warn in react-native
+      if (typeof key === 'string' && !(key in target) && key !== 'toJSON') {
         warnNonPresent(target, key)
       }
       return target[key]

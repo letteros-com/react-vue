@@ -1,10 +1,8 @@
 # Vue Component API
+> Vue component actually runs in the React runtime. It means, you can not access [VNode](https://vuejs.org/v2/api/#VNode-Interface), you can not use [Render](https://vuejs.org/v2/guide/render-function.html). Conversely, if your previous Vue component does not involve both things, it would most likely run directly in react-vue. 
 
-With [react-vue-loader](https://github.com/SmallComfort/react-vue-loader), we can easily integrate the Vue component into the React component
-
-> Vue component actually runs in the React runtime. It means, you can not access [VNode](https://vuejs.org/v2/api/#VNode-Interface), you can not use [Render](https://vuejs.org/v2/guide/render-function.html). Conversely, if your previous Vue component does not involve both things, it would most likely run directly in react-vue. [demo](https://github.com/SmallComfort/react-vue-material-demo)
-
-The following lists all Vue's API supported.
+* web: [react-vue-loader](https://github.com/SmallComfort/react-vue-loader) ([demo](https://github.com/SmallComfort/react-vue-material-demo))
+* native: [react-vue-native-scripts]() ([demo]())
 
 ## Supported API
 
@@ -14,8 +12,8 @@ The following lists all Vue's API supported.
 
 * [optionMergeStrategies](https://vuejs.org/v2/api/#optionMergeStrategies)
 * [errorHandler](https://vuejs.org/v2/api/#errorHandler)
-* [ignoredElements](https://vuejs.org/v2/api/#ignoredElements)
-* [keyCodes](https://vuejs.org/v2/api/#keyCodes)
+* [ignoredElements](https://vuejs.org/v2/api/#ignoredElements) (web only)
+* [keyCodes](https://vuejs.org/v2/api/#keyCodes) (web only)
 
 #### Global API
 > Use the react-vue-loader options: [```vue```](https://github.com/SmallComfort/react-vue-loader#additional-options)
@@ -24,7 +22,7 @@ The following lists all Vue's API supported.
 * [Vue.nextTick](https://vuejs.org/v2/api/#Vue-nextTick)
 * [Vue.set](https://vuejs.org/v2/api/#Vue-set)
 * [Vue.delete](https://vuejs.org/v2/api/#Vue-delete)
-* [Vue.directive](https://vuejs.org/v2/api/#Vue-directive)
+* [Vue.directive](https://vuejs.org/v2/api/#Vue-directive) (web only)
   > [partial support](https://github.com/SmallComfort/react-vue/blob/dev/packages/react-vue/COMPONENT.md#options--assets)
 * [Vue.component](https://vuejs.org/v2/api/#Vue-component)
 * [Vue.use](https://vuejs.org/v2/api/#Vue-use)
@@ -50,7 +48,7 @@ The following lists all Vue's API supported.
 * [beforeDestroy](https://vuejs.org/v2/api/#beforeDestroy)
 
 #### Options / Assets
-* [directives](https://vuejs.org/v2/api/#directives)
+* [directives](https://vuejs.org/v2/api/#directives) (web only)
   * [Hook-Functions](https://vuejs.org/v2/guide/custom-directive.html#Hook-Functions)
     * bind
     * update
@@ -103,17 +101,17 @@ The following lists all Vue's API supported.
 * [vm.$nextTick](https://vuejs.org/v2/api/#vm-nextTick)
 
 #### Directives
-* [v-text](https://vuejs.org/v2/api/#v-text)
+* [v-text](https://vuejs.org/v2/api/#v-text) (web only)
 
-* [v-html](https://vuejs.org/v2/api/#v-html)
+* [v-html](https://vuejs.org/v2/api/#v-html) (web only)
 * [v-show](https://vuejs.org/v2/api/#v-show)
 * [v-if](https://vuejs.org/v2/api/#v-if)
 * [v-else](https://vuejs.org/v2/api/#v-else)
 * [v-else-if](https://vuejs.org/v2/api/#v-else-if)
 * [v-for](https://vuejs.org/v2/api/#v-for)
-* [v-on](https://vuejs.org/v2/api/#v-on)
+* [v-on](https://vuejs.org/v2/api/#v-on) (web only)
 * [v-bind](https://vuejs.org/v2/api/#v-bind)
-* [v-model](https://vuejs.org/v2/api/#v-model)
+* [v-model](https://vuejs.org/v2/api/#v-model) (web only)
   > Unsupported features: [value bindings checkbox](https://vuejs.org/v2/guide/forms.html#Checkbox-1) & [value bindings select options](https://vuejs.org/v2/guide/forms.html#Select-Options)
 
 #### Special Attributes
@@ -126,14 +124,14 @@ The following lists all Vue's API supported.
 #### Built-In Components
 * [component](https://vuejs.org/v2/api/#component)
 
-* [transition](https://vuejs.org/v2/api/#transition)
+* [transition](https://vuejs.org/v2/api/#transition) (web only)
   > The \<transition> would render an extra DOM element, you can configure ```tag``` attribute to custom the extra DOM element
 
   > Unsupported features: [transition modes](https://vuejs.org/v2/guide/transitions.html#Transition-Modes)
 
 * [slot](https://vuejs.org/v2/api/#slot)
 
-#### Server-Side Rendering
+#### Server-Side Rendering (web only)
   > Use React Server Rendering
 
 ## Unsupported API

@@ -30,6 +30,10 @@ var changeCase = _interopDefault(require('change-case'));
  */
 
 
+/**
+ * Strict object type check. Only returns true
+ * for plain JavaScript objects.
+ */
 
 
 /**
@@ -71,6 +75,9 @@ var isBuiltInTag = makeMap('slot,component', true);
  */
 
 
+/**
+ * Check whether the object has the property.
+ */
 
 
 /**
@@ -99,6 +106,9 @@ var capitalize = cached(function (str) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 });
 
+/**
+ * Hyphenate a camelCase string.
+ */
 
 
 /**
@@ -187,7 +197,6 @@ var isNonPhrasingTag = makeMap(
  * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
  */
 
-// Regular Expressions for parsing tags and attributes
 var singleAttrIdentifier = /([^\s"'<>/=]+)/;
 var singleAttrAssign = /(?:=)/;
 var singleAttrValues = [
@@ -1065,12 +1074,11 @@ function handleError (err, vm, info) {
 /*  */
 /* globals MutationObserver */
 
-// can we use __proto__?
 
 
 // Browser environment sniffing
 var inBrowser = typeof window !== 'undefined';
-var UA = inBrowser && window.navigator.userAgent.toLowerCase();
+var UA = inBrowser && window.navigator && window.navigator.userAgent && window.navigator.userAgent.toLowerCase();
 var isIE = UA && /msie|trident/.test(UA);
 var isIE9 = UA && UA.indexOf('msie 9.0') > 0;
 var isEdge = UA && UA.indexOf('edge/') > 0;
@@ -2038,12 +2046,19 @@ var WEB = {
   }
 };
 
-var NATIVE = {};
+var NATIVE = {
+  'bindClass': {
+    name: (HELPER_HEADER + "bindClass"),
+    alias: "bindNativeClass"
+  },
+  'bindStyle': {
+    name: (HELPER_HEADER + "bindStyle"),
+    alias: "bindNativeStyle"
+  }
+};
 
 /*  */
 
-// these are reserved for web because they are directly compiled away
-// during template compilation
 var isReservedAttr = makeMap('style,class');
 
 // attributes that should be using props for binding
@@ -2201,7 +2216,6 @@ function transformSpecialNewlines (text) {
 
 var BaseGenerator = function BaseGenerator (ast, options) {
   this.ast = ast;
-  this.level = options.level;
   this.variableDependency = [];
   this.slots = [];
   this.vueConfig = options.vueConfig || {};
@@ -2210,6 +2224,8 @@ var BaseGenerator = function BaseGenerator (ast, options) {
   specialObserver(COMMON, this.setVariableDependency.bind(this));
   specialObserver(WEB, this.setVariableDependency.bind(this));
   specialObserver(NATIVE, this.setVariableDependency.bind(this));
+
+  this.coreCode = this.genElement(this.ast).trim();
 };
 
 BaseGenerator.prototype.setSlots = function setSlots (name) {
@@ -2225,16 +2241,24 @@ BaseGenerator.prototype.setVariableDependency = function setVariableDependency (
 };
 
 BaseGenerator.prototype.generate = function generate () {
-  var coreCode = this.genElement(this.ast, this.level);
-  var importDep = this.genDependence();
-  var render = coreCode.trim();
-  var slot = '';
-  render = "return " + render;
+  var importCode = this.generateImport();
+  var renderCode = this.generateRender();
+
+  return (importCode + " \n export default " + renderCode)
+};
+
+BaseGenerator.prototype.generateImport = function generateImport () {
+  return this.genDependence()
+};
+
+BaseGenerator.prototype.generateRender = function generateRender () {
+  var render = "return " + (this.coreCode);
   if (this.slots.length) {
-    slot = "const " + (COMMON.renderSlot.value) + " = " + (COMMON.renderSlot.name) + ".call(this, [" + (this.slots.join(',')) + "], this.props.children)";
+    var slot = "const " + (COMMON.renderSlot.value) + " = " + (COMMON.renderSlot.name) + ".call(this, [" + (this.slots.join(',')) + "], this.props.children)";
     render = slot + "\n" + render;
   }
-  return (importDep + " export default function render (vm) {" + render + "}")
+  render = "function render (vm) {" + render + "}";
+  return render
 };
 
 BaseGenerator.prototype.genDependence = function genDependence () {
@@ -3424,7 +3448,7 @@ var RenderGenerator = (function (BaseGenerator$$1) {
             }
           }
           if (!isReservedTag(ast.tag)) {
-            name = changeCase.camelCase(name);
+            name = camelize(name);
           } else if (propertyMap[name]) {
             name = propertyMap[name];
           }
@@ -3779,16 +3803,19 @@ function parseStyleText (cssText) {
   cssText.split(listDelimiter).forEach(function (item) {
     if (item) {
       var tmp = item.split(propertyDelimiter);
-      tmp.length > 1 && (res[changeCase.camelCase(tmp[0].trim())] = tmp[1].trim());
+      if (tmp.length > 1) {
+        var val = tmp[1].trim();
+        if (isNaN(val) === false) {
+          val = parseFloat(val);
+        }
+        res[changeCase.camelCase(tmp[0].trim())] = val;
+      }
     }
   });
   return res
 }
 
 /*  */
-
-// in some cases, the event used has to be determined at runtime
-// so we used some reserved tokens during compile.
 
 function model (
   el,
@@ -4296,15 +4323,197 @@ var ReactWebRenderGenerator = (function (RenderGenerator$$1) {
   return ReactWebRenderGenerator;
 }(RenderGenerator));
 
-// import {
-//   handleUnaryTag
-// } from './helpers'
+var ReactNativeRenderGenerator = (function (RenderGenerator$$1) {
+  function ReactNativeRenderGenerator (ast, options) {
+    RenderGenerator$$1.call(this, ast, options);
+    this.isNative = true;
+  }
+
+  if ( RenderGenerator$$1 ) ReactNativeRenderGenerator.__proto__ = RenderGenerator$$1;
+  ReactNativeRenderGenerator.prototype = Object.create( RenderGenerator$$1 && RenderGenerator$$1.prototype );
+  ReactNativeRenderGenerator.prototype.constructor = ReactNativeRenderGenerator;
+
+  /**
+   * override
+   */
+  ReactNativeRenderGenerator.prototype.genTag = function genTag (ast) {
+    var tag = ast.tag;
+
+    if (isBuildInTag(tag)) {
+      tag = "" + tag;
+    } else {
+      var c = tag.split(':').map(function (v) { return ("['" + (capitalize(camelize(v))) + "']"); }).join('');
+      tag = "vm.$options.components" + c;
+    }
+
+    return tag
+  };
+
+  /**
+   * override
+   * gen text expression
+   * @param {Object} ast
+   */
+  ReactNativeRenderGenerator.prototype.genTextExpression = function genTextExpression (ast) {
+    var code = RenderGenerator$$1.prototype.genTextExpression.call(this, ast);
+    code = code
+      .replace(/^"\\n\s*/, '"')
+      .replace(/\\n\s*"$/, '"');
+    return code
+  };
+
+  /**
+   * override
+   * gen text
+   * @param {Object} ast
+   */
+  ReactNativeRenderGenerator.prototype.genText = function genText (ast) {
+    var code = RenderGenerator$$1.prototype.genText.call(this, ast);
+    code = code
+      .replace(/^"\\n\s*/, '"')
+      .replace(/\\n\s*"$/, '"');
+    return code
+  };
+
+  /**
+   * override
+   */
+  ReactNativeRenderGenerator.prototype.genProps = function genProps (ast) {
+    var code = [];
+    ast.attrs = ast.attrs || [];
+    if (ast.slotTarget !== undefined) {
+      this.genSlotTarget(ast);
+    }
+    if (ast.ref || ast.parent === undefined) {
+      var ref = this.genRef(ast);
+      if (ref) {
+        code.push(ref);
+      }
+    }
+    if (ast.key !== undefined) {
+      var key = this.genKey(ast);
+      if (key) {
+        code.push(key);
+      }
+    }
+    if (Array.isArray(ast.attrs)) {
+      var props = ast.attrs
+        .filter(function (v) {
+          return v.name !== 'class' && v.name !== 'style' && v.name !== 'v-pre'
+        })
+        .map(function (v) {
+          var name = v.name;
+          name = camelize(name);
+          return (name + ": " + (v.value))
+        });
+      code = code.concat(props);
+    }
+
+    var styleProps = this.genNativeStyleProps(ast);
+    if (styleProps) {
+      code.push(styleProps);
+    }
+
+    return code
+  };
+
+  // merge style & class
+  ReactNativeRenderGenerator.prototype.genNativeStyleProps = function genNativeStyleProps (ast) {
+    var code = [];
+    var classProps = this.genClassProps(ast);
+    if (classProps) {
+      code = code.concat(classProps);
+    }
+
+    var styleProps = this.genStyleProps(ast);
+    if (styleProps) {
+      code.push(styleProps);
+    }
+
+    return ("style: [" + (code.join(',')) + "]")
+  };
+
+  /**
+   * gen style props
+   * @param {Object} ast
+   */
+  ReactNativeRenderGenerator.prototype.genStyleProps = function genStyleProps (ast) {
+    var styleAttrsValue = ast.attrs.filter(function (v) { return v.name === 'style'; }).map(function (v) { return v.value; });
+    var show = ast.directives && ast.directives.filter(function (v) { return v.name === 'show'; })[0];
+    var topParent = this.isAstTopParent(ast);
+    if (styleAttrsValue.length === 0 && !show && !topParent) {
+      return
+    }
+    var staticStyle, dynamicStyle, showStyle;
+    styleAttrsValue.forEach(function (v) {
+      if (/^".*"$/.test(v)) {
+        staticStyle = v.trim().replace(/;*"$/, ';"');
+      } else {
+        dynamicStyle = v;
+      }
+    });
+    if (staticStyle) {
+      try {
+        staticStyle = JSON.stringify(parseStyleText(staticStyle));
+      } catch (e) {}
+    }
+    if (show) {
+      showStyle = "{display: " + (show.value) + " ? '' : 'none'}";
+    }
+    return ((NATIVE.bindStyle.name) + "(" + dynamicStyle + ", " + staticStyle + ", " + showStyle + ")")
+  };
+
+  /**
+   * gen class props
+   * @param {Object} ast
+   */
+  ReactNativeRenderGenerator.prototype.genClassProps = function genClassProps (ast) {
+    var topParent = this.isAstTopParent(ast);
+    var classAttrsValue = ast.attrs.filter(function (v) { return v.name === 'class'; }).map(function (v) { return v.value; });
+    if (classAttrsValue.length === 0 && !topParent) {
+      return
+    }
+    var staticClass, dynamicClass;
+    classAttrsValue.forEach(function (v) {
+      if (/^".*"$/.test(v) || /^'.*'$/.test(v)) {
+        staticClass = v.trim(); // .replace(/^"(.*)"$/, '$1')
+      } else {
+        dynamicClass = v;
+      }
+    });
+    var objCode = '{';
+    if (staticClass) {
+      objCode += "staticClass: " + staticClass + ",";
+    }
+    if (dynamicClass) {
+      objCode += "dynamicClass: " + dynamicClass + ",";
+    }
+    if (topParent) {
+      objCode += "parentClass: this.props.style,";
+    }
+    objCode = (objCode.replace(/,$/, '')) + "}";
+    return ((NATIVE.bindClass.name) + ".call(this, " + objCode + ")")
+  };
+
+  ReactNativeRenderGenerator.prototype.isAstTopParent = function isAstTopParent (ast) {
+    if (ast.parent === undefined) {
+      return true
+    }
+    if (ast.parent.tag === 'template' || ast.parent.tag === 'transition' || ast.parent.originTag === 'transition') {
+      if (ast.parent.parent === undefined) {
+        return true
+      }
+    }
+    return false
+  };
+
+  return ReactNativeRenderGenerator;
+}(RenderGenerator));
 
 var baseOptions = {
   expectHTML: true,
   isPreTag: isPreTag,
   isUnaryTag: isUnaryTag$1,
-  // mustUseProp,
   canBeLeftOpenTag: canBeLeftOpenTag$1,
   isReservedTag: isReservedTag,
   getTagNamespace: getTagNamespace
@@ -4313,9 +4522,9 @@ var baseOptions = {
 function compile (template, options) {
   var ast;
   var code;
+  template = template.trim();
   if (template) {
-    ast = parse(template.trim(), Object.assign({}, baseOptions, options));
-    // ast.children.forEach(v => handleUnaryTag(v))
+    ast = parse(template, Object.assign({}, baseOptions, options));
     var renderer = new ReactWebRenderGenerator(ast, options);
     code = renderer.generate();
   } else {
@@ -4327,7 +4536,29 @@ function compile (template, options) {
   }
 }
 
+function nativeCompiler (template, options) {
+  var ast;
+  var importCode = '';
+  var renderCode = '() => null';
+  options = Object.assign({
+    preserveWhitespace: false
+  }, options);
+  template = template.trim();
+  if (template) {
+    ast = parse(template, options);
+    var renderer = new ReactNativeRenderGenerator(ast, options);
+    importCode = renderer.generateImport();
+    renderCode = renderer.generateRender();
+  }
+  return {
+    ast: ast,
+    importCode: importCode,
+    renderCode: renderCode
+  }
+}
+
 /*  */
 
 exports.parseComponent = parseComponent;
 exports.compile = compile;
+exports.nativeCompiler = nativeCompiler;

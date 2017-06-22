@@ -120,7 +120,16 @@ const WEB = {
   }
 }
 
-const NATIVE = {}
+const NATIVE = {
+  'bindClass': {
+    name: `${HELPER_HEADER}bindClass`,
+    alias: `bindNativeClass`
+  },
+  'bindStyle': {
+    name: `${HELPER_HEADER}bindStyle`,
+    alias: `bindNativeStyle`
+  }
+}
 
 export {
   COMMON,

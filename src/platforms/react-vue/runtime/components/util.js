@@ -17,6 +17,7 @@ export function isObjectShallowModified (prev, next) {
   //     return true
   //   }
   // }
+  // return false
   if (prev.children !== undefined || next.children !== undefined) {
     return true
   }

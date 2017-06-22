@@ -6,8 +6,14 @@ export default function parseStyleText (cssText) {
   const propertyDelimiter = /:(.+)/
   cssText.split(listDelimiter).forEach(function (item) {
     if (item) {
-      var tmp = item.split(propertyDelimiter)
-      tmp.length > 1 && (res[changeCase.camelCase(tmp[0].trim())] = tmp[1].trim())
+      const tmp = item.split(propertyDelimiter)
+      if (tmp.length > 1) {
+        let val = tmp[1].trim()
+        if (isNaN(val) === false) {
+          val = parseFloat(val)
+        }
+        res[changeCase.camelCase(tmp[0].trim())] = val
+      }
     }
   })
   return res

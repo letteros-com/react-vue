@@ -482,7 +482,7 @@ var hasProto = '__proto__' in {};
 
 // Browser environment sniffing
 var inBrowser = typeof window !== 'undefined';
-var UA = inBrowser && window.navigator.userAgent.toLowerCase();
+var UA = inBrowser && window.navigator && window.navigator.userAgent && window.navigator.userAgent.toLowerCase();
 var isIE = UA && /msie|trident/.test(UA);
 var isIE9 = UA && UA.indexOf('msie 9.0') > 0;
 var isEdge = UA && UA.indexOf('edge/') > 0;
@@ -1479,7 +1479,7 @@ if (process.env.NODE_ENV !== 'production') {
     'Infinity,undefined,NaN,isFinite,isNaN,' +
     'parseFloat,parseInt,decodeURI,decodeURIComponent,encodeURI,encodeURIComponent,' +
     'Math,Number,Date,Array,Object,Boolean,String,RegExp,Map,Set,JSON,Intl,' +
-    'require' // for Webpack/Browserify
+    'require, toJSON' // for Webpack/Browserify
   );
 
   var warnNonPresent = function (target, key) {
@@ -1523,7 +1523,8 @@ if (process.env.NODE_ENV !== 'production') {
 
   var getHandler = {
     get: function get (target, key) {
-      if (typeof key === 'string' && !(key in target)) {
+      // react-vue change ```key === 'toJSON'``` prevent warn in react-native
+      if (typeof key === 'string' && !(key in target) && key !== 'toJSON') {
         warnNonPresent(target, key);
       }
       return target[key]
@@ -3770,10 +3771,10 @@ function initAssetRegisters (Vue) {
             );
           }
         }
-        if (type === 'component' && isPlainObject(definition)) {
-          definition.name = definition.name || id;
-          definition = this.options._base.extend(definition);
-        }
+        // if (type === 'component' && isPlainObject(definition)) {
+        //   definition.name = definition.name || id
+        //   definition = this.options._base.extend(definition)
+        // }
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition };
         }

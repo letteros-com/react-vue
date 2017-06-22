@@ -1,4 +1,5 @@
 import changeCase from 'change-case'
+import { camelize } from 'shared/util'
 import {
   COMMON
 } from '../config'
@@ -306,7 +307,7 @@ class RenderGenerator extends BaseGenerator {
             }
           }
           if (!isReservedTag(ast.tag)) {
-            name = changeCase.camelCase(name)
+            name = camelize(name)
           } else if (propertyMap[name]) {
             name = propertyMap[name]
           }

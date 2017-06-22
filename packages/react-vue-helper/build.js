@@ -283,6 +283,10 @@ function def (obj, key, val, enumerable) {
   });
 }
 
+/**
+ * Parse simple path.
+ */
+
 var ASSET_TYPES = [
   'component',
   'directive',
@@ -495,12 +499,11 @@ function handleError (err, vm, info) {
 /*  */
 /* globals MutationObserver */
 
-// can we use __proto__?
 var hasProto = '__proto__' in {};
 
 // Browser environment sniffing
 var inBrowser = typeof window !== 'undefined';
-var UA = inBrowser && window.navigator.userAgent.toLowerCase();
+var UA = inBrowser && window.navigator && window.navigator.userAgent && window.navigator.userAgent.toLowerCase();
 var isIE = UA && /msie|trident/.test(UA);
 var isIE9 = UA && UA.indexOf('msie 9.0') > 0;
 var isEdge = UA && UA.indexOf('edge/') > 0;
@@ -698,9 +701,6 @@ Dep.prototype.notify = function notify () {
   }
 };
 
-// the current target watcher being evaluated.
-// this is globally unique because there could be only one
-// watcher being evaluated at any time.
 Dep.target = null;
 
 /*
@@ -972,11 +972,6 @@ function dependArray (value) {
 
 /*  */
 
-/**
- * Option overwriting strategies are functions that handle
- * how to merge a parent option value and a child option
- * value into the final value.
- */
 var strats = config.optionMergeStrategies;
 
 /**
@@ -1155,8 +1150,7 @@ var defaultStrat = function (parentVal, childVal) {
 };
 
 /**
- * Merge two option objects into a new one.
- * Core utility used in both instantiation and inheritance.
+ * Validate component names
  */
 
 
@@ -1194,6 +1188,12 @@ function resolveAsset (
 }
 
 /*  */
+
+
+
+/**
+ * Get the default value of a prop.
+ */
 
 function setSelected (el, binding, vm) {
   var value = binding.value;
@@ -1273,9 +1273,6 @@ var index = {
 
 /*  */
 
-/**
- * Runtime helper for rendering v-for lists.
- */
 function renderList (
   val,
   render
@@ -1483,18 +1480,57 @@ function renderSlot (names, children) {
   return render
 }
 
-function bindWebClass (classBinding) {
-  var type = Object.prototype.toString.call(classBinding);
+function bindWebClass (c) {
+  var type = Object.prototype.toString.call(c);
   if (type === '[object Object]') {
-    return Object.keys(classBinding).filter(function (k) {
-      return !!classBinding[k]
+    return Object.keys(c).filter(function (k) {
+      return !!c[k]
     }).join(' ')
   } else if (type === '[object Array]') {
-    return classBinding.map(function (v) {
+    return c.map(function (v) {
       return bindWebClass(v)
     }).join(' ')
   }
-  return classBinding
+  return c
+}
+
+function classBinding (c) {
+  var type = Object.prototype.toString.call(c);
+  if (type === '[object Object]') {
+    return Object.keys(c).filter(function (k) {
+      return !!c[k]
+    })
+  } else if (type === '[object Array]') {
+    return c.map(function (v) {
+      return classBinding(v)
+    }).reduce(function (acc, val) {
+      return acc.concat(val)
+    }, [])
+  }
+  return c
+}
+
+function bindNativeClass (obj) {
+  var this$1 = this;
+
+  var arr = [];
+  var style = [];
+  if (obj.dynamicClass) {
+    console.log('obj.dynamicClass', obj.dynamicClass);
+    arr = arr.concat(classBinding(obj.dynamicClass));
+  }
+  if (obj.staticClass) {
+    arr = arr.concat(obj.staticClass.split(/\s+/));
+  }
+  arr.forEach(function (v) {
+    if (typeof this$1.css[v] === 'number') {
+      style.push(this$1.css[v]);
+    }
+  });
+  if (obj.parentClass) {
+    style.push(obj.parentClass);
+  }
+  return style
 }
 
 var prefixes = ['Webkit', 'Moz', 'ms'];
@@ -1533,10 +1569,25 @@ function bindWebStyle (styleBinding, staticStyle, showStyle) {
   }
 }
 
+function bindNativeStyle (styleBinding, staticStyle, showStyle) {
+  if (styleBinding === undefined) {
+    styleBinding = {};
+  }
+  staticStyle = Object.assign({}, staticStyle, showStyle);
+  if (staticStyle.display === '') {
+    delete showStyle.display;
+  }
+  var type = Object.prototype.toString.call(styleBinding);
+  if (type === '[object Object]') {
+    return Object.assign({}, styleBinding, staticStyle)
+  } else if (type === '[object Array]') {
+    return styleBinding.map(function (v) {
+      return bindNativeStyle(v, staticStyle, showStyle)
+    }).reduce(function (acc, val) { return Object.assign(acc, val); }, {})
+  }
+}
+
 /*  */
-/**
- * Runtime helper for checking keyCodes.
- */
 function checkKeyCodes (
   vm,
   eventKeyCode,
@@ -1598,6 +1649,7 @@ function isObjectShallowModified (prev, next) {
   //     return true
   //   }
   // }
+  // return false
   if (prev.children !== undefined || next.children !== undefined) {
     return true
   }
@@ -1712,9 +1764,6 @@ function dynamicComponent (vm, name) {
 
 /*  */
 
-/**
- * Runtime helper for resolving filters
- */
 function resolveFilter (id) {
   return resolveAsset(this.$options, 'filters', id, true) || identity
 }
@@ -2450,8 +2499,6 @@ Object.keys(reactProps).map(function (v) {
 
 /*  */
 
-// these are reserved for web because they are directly compiled away
-// during template compilation
 var isReservedAttr = makeMap('style,class');
 
 // attributes that should be using props for binding
@@ -3256,10 +3303,6 @@ function buildWebEmptyComponent (Component, createElement) {
   }(Component))
 }
 
-// import {
-//   isObjectShallowModified
-// } from './util'
-
 function filterCollection (collection) {
   var result = [];
   collection.forEach(function (v) {
@@ -3845,11 +3888,195 @@ function buildInputComponent (Component, createElement) {
 
 var buildWebInputComponent = buildInputComponent;
 
+function buildNativeComponent (render, options, config) {
+  var Component = config.Component;
+  var PropTypes = config.PropTypes;
+  var Vue = config.Vue;
+  var ReactNative = config.ReactNative;
+  var css = config.css;
+  if (!Vue.ReactNativeInjected) {
+    Vue.ReactNativeInjected = true;
+    Object.keys(ReactNative).map(function (k) {
+      if (/^[A-Z]/.test(k)) {
+        try {
+          Vue.component(k, ReactNative[k]);
+        } catch (e) {}
+      }
+    });
+  }
+  var ReactVueComponent = (function (Component) {
+    function ReactVueComponent (props) {
+      Component.call(this, props);
+      this._ref = null;
+      this.eventOnceUid = [];
+      this.newDirectiveData = {};
+      this.oldDirectiveData = {};
+      this.vm = {};
+      this.beforeMount = [];
+      this.mounted = [];
+      this.beforeUpdate = [];
+      this.updated = [];
+      this.beforeDestroy = [];
+      this.css = ReactNative.StyleSheet.create(css);
+    }
+
+    if ( Component ) ReactVueComponent.__proto__ = Component;
+    ReactVueComponent.prototype = Object.create( Component && Component.prototype );
+    ReactVueComponent.prototype.constructor = ReactVueComponent;
+
+    /**
+     * children can access parent instance by 'this.context.owner'
+     */
+    ReactVueComponent.prototype.getChildContext = function getChildContext () {
+      return {
+        owner: this
+      }
+    };
+
+    /**
+     * for event modifiers v-on:xxx.once
+     */
+    ReactVueComponent.prototype.setEventOnce = function setEventOnce (fn) {
+      var this$1 = this;
+
+      var name = fn.name;
+      return function (event) {
+        if (this$1.eventOnceUid.indexOf(name) === -1) {
+          this$1.eventOnceUid.push(name);
+          fn(event);
+        }
+      }
+    };
+
+    ReactVueComponent.prototype.setRootRef = function setRootRef (ref) {
+      if (ref) {
+        ref = ref._ref || ref;
+        this._ref = ref;
+        this.vm.$el = this._ref;
+      }
+    };
+
+    ReactVueComponent.prototype.setRef = function setRef (ref, text, inFor) {
+      if (ref) {
+        // for buildin component, we set ref to his hold node directly
+        // it means the buildin componet would be the end of $refs chain
+        ref = ref.vm || ref._ref || ref;
+        if (inFor === true) {
+          if (!this.vm.$refs[text]) {
+            this.vm.$refs[text] = [];
+          }
+          this.vm.$refs[text].push(ref);
+        } else {
+          this.vm.$refs[text] = ref;
+        }
+        this.$refs = this.vm.$refs;
+      }
+    };
+
+    ReactVueComponent.prototype.buildVM = function buildVM (options) {
+      // set this property to prevent runtime error in vue
+      render._withStripped = true;
+
+      var vueOptions = {
+        render: render,
+        propsData: this.props,
+        parent: this.context.owner ? this.context.owner.vm : undefined
+      };
+
+      var reactVueOptions = {
+        reactVueSlots: getSlots(this.props.children),
+        reactVueForceUpdate: this.forceUpdate.bind(this),
+        reactVueCustomEvent: filterCustomEvent(this.props)
+      };
+
+      Object.assign(options, vueOptions, reactVueOptions);
+
+      var vm = new Vue(options);
+
+      vm.$options.directives = handleDirectives(vm.$options.directives);
+      vm.$options.components = handleComponents(vm.$options.components);
+
+      /**
+       * for ignoredElements
+       */
+      Vue.config.ignoredElements.forEach(function (name) {
+        var _name = pascalCaseTag(name);
+        if (vm.$options.components[_name] === undefined) {
+          vm.$options.components[_name] = name;
+        }
+      });
+
+      return vm
+    };
+
+    ReactVueComponent.prototype.componentWillMount = function componentWillMount () {
+      var this$1 = this;
+
+      this.vm = this.buildVM(options);
+
+      this.beforeMount = this.vm.$options.beforeMount || [];
+      this.mounted = this.vm.$options.mounted || [];
+      this.beforeUpdate = this.vm.$options.beforeUpdate || [];
+      this.updated = this.vm.$options.updated || [];
+      this.beforeDestroy = this.vm.$options.beforeDestroy || [];
+
+      this.beforeMount.forEach(function (v) { return v.call(this$1.vm); });
+    };
+
+    ReactVueComponent.prototype.componentDidMount = function componentDidMount () {
+      var this$1 = this;
+
+      setTimeout(function () {
+        this$1.mounted.forEach(function (v) { return v.call(this$1.vm); });
+      }, 0);
+    };
+    ReactVueComponent.prototype.componentWillUpdate = function componentWillUpdate () {
+      var this$1 = this;
+
+      this.beforeUpdate.forEach(function (v) { return v.call(this$1.vm); });
+    };
+    ReactVueComponent.prototype.componentDidUpdate = function componentDidUpdate () {
+      var this$1 = this;
+
+      this.updated.forEach(function (v) { return v.call(this$1.vm); });
+    };
+    ReactVueComponent.prototype.componentWillUnmount = function componentWillUnmount () {
+      var this$1 = this;
+
+      this.beforeDestroy.forEach(function (v) { return v.call(this$1.vm); });
+    };
+    ReactVueComponent.prototype.componentWillReceiveProps = function componentWillReceiveProps (nextProps) {
+      this.vm._props && Object.assign(this.vm._props, nextProps);
+      this.vm.$slots = getSlots(nextProps.children);
+    };
+    ReactVueComponent.prototype.shouldComponentUpdate = function shouldComponentUpdate (nextProps) {
+      return isObjectShallowModified(this.props, nextProps)
+    };
+    ReactVueComponent.prototype.render = function render$1 () {
+      return render ? render.call(this, this.vm._renderProxy) : null
+    };
+
+    return ReactVueComponent;
+  }(Component));
+  ReactVueComponent.childContextTypes = {
+    owner: PropTypes.object
+  };
+  ReactVueComponent.contextTypes = {
+    owner: PropTypes.object
+  };
+
+  ReactVueComponent.options = options;
+
+  return ReactVueComponent
+}
+
 exports.platformDirectives = index;
 exports.renderList = renderList;
 exports.renderSlot = renderSlot;
 exports.bindWebClass = bindWebClass;
+exports.bindNativeClass = bindNativeClass;
 exports.bindWebStyle = bindWebStyle;
+exports.bindNativeStyle = bindNativeStyle;
 exports.checkKeyCodes = checkKeyCodes;
 exports.template = template;
 exports.event = event;
@@ -3890,3 +4117,4 @@ exports.buildDirective = buildDirective;
 exports.buildWebTransition = buildWebTransition;
 exports.buildWebEmptyComponent = buildWebEmptyComponent;
 exports.buildWebInputComponent = buildWebInputComponent;
+exports.buildNativeComponent = buildNativeComponent;

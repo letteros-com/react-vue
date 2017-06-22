@@ -13,7 +13,6 @@ import {
 class BaseGenerator {
   constructor (ast, options) {
     this.ast = ast
-    this.level = options.level
     this.variableDependency = []
     this.slots = []
     this.vueConfig = options.vueConfig || {}
@@ -22,6 +21,8 @@ class BaseGenerator {
     specialObserver(COMMON, this.setVariableDependency.bind(this))
     specialObserver(WEB, this.setVariableDependency.bind(this))
     specialObserver(NATIVE, this.setVariableDependency.bind(this))
+
+    this.coreCode = this.genElement(this.ast).trim()
   }
 
   setSlots (name) {
@@ -37,16 +38,24 @@ class BaseGenerator {
   }
 
   generate () {
-    const coreCode = this.genElement(this.ast, this.level)
-    const importDep = this.genDependence()
-    let render = coreCode.trim()
-    let slot = ''
-    render = `return ${render}`
+    const importCode = this.generateImport()
+    const renderCode = this.generateRender()
+
+    return `${importCode} \n export default ${renderCode}`
+  }
+
+  generateImport () {
+    return this.genDependence()
+  }
+
+  generateRender () {
+    let render = `return ${this.coreCode}`
     if (this.slots.length) {
-      slot = `const ${COMMON.renderSlot.value} = ${COMMON.renderSlot.name}.call(this, [${this.slots.join(',')}], this.props.children)`
+      const slot = `const ${COMMON.renderSlot.value} = ${COMMON.renderSlot.name}.call(this, [${this.slots.join(',')}], this.props.children)`
       render = `${slot}\n${render}`
     }
-    return `${importDep} export default function render (vm) {${render}}`
+    render = `function render (vm) {${render}}`
+    return render
   }
 
   genDependence () {
