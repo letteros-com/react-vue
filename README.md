@@ -97,7 +97,7 @@ export default class Three extends Component {
 [document](https://github.com/SmallComfort/react-vue/blob/dev/packages/react-vue/COMPONENT.md)
 
 ### Native
-Introduce [react-vue-native-scripts](), which start a server to compile the vue component into a react component.
+Introduce [react-vue-native-scripts](https://github.com/SmallComfort/react-vue-native-scripts), which start a server to compile the vue component into a react component.
 
 ```
 npm install --save react-vue react-vue-helper
