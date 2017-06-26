@@ -19,7 +19,9 @@ const normalize = cached(function (prop) {
 })
 
 export function bindWebStyle (styleBinding, staticStyle, showStyle) {
-  styleBinding = Object.assign({}, styleBinding)
+  if (styleBinding === undefined) {
+    styleBinding = {}
+  }
   staticStyle = Object.assign({}, staticStyle, showStyle)
   const type = Object.prototype.toString.call(styleBinding)
   if (type === '[object Object]') {

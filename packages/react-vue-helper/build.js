@@ -283,10 +283,6 @@ function def (obj, key, val, enumerable) {
   });
 }
 
-/**
- * Parse simple path.
- */
-
 var ASSET_TYPES = [
   'component',
   'directive',
@@ -499,6 +495,7 @@ function handleError (err, vm, info) {
 /*  */
 /* globals MutationObserver */
 
+// can we use __proto__?
 var hasProto = '__proto__' in {};
 
 // Browser environment sniffing
@@ -701,6 +698,9 @@ Dep.prototype.notify = function notify () {
   }
 };
 
+// the current target watcher being evaluated.
+// this is globally unique because there could be only one
+// watcher being evaluated at any time.
 Dep.target = null;
 
 /*
@@ -972,6 +972,11 @@ function dependArray (value) {
 
 /*  */
 
+/**
+ * Option overwriting strategies are functions that handle
+ * how to merge a parent option value and a child option
+ * value into the final value.
+ */
 var strats = config.optionMergeStrategies;
 
 /**
@@ -1150,7 +1155,8 @@ var defaultStrat = function (parentVal, childVal) {
 };
 
 /**
- * Validate component names
+ * Merge two option objects into a new one.
+ * Core utility used in both instantiation and inheritance.
  */
 
 
@@ -1188,12 +1194,6 @@ function resolveAsset (
 }
 
 /*  */
-
-
-
-/**
- * Get the default value of a prop.
- */
 
 function setSelected (el, binding, vm) {
   var value = binding.value;
@@ -1273,6 +1273,9 @@ var index = {
 
 /*  */
 
+/**
+ * Runtime helper for rendering v-for lists.
+ */
 function renderList (
   val,
   render
@@ -1552,7 +1555,9 @@ var normalize = cached(function (prop) {
 });
 
 function bindWebStyle (styleBinding, staticStyle, showStyle) {
-  styleBinding = Object.assign({}, styleBinding);
+  if (styleBinding === undefined) {
+    styleBinding = {};
+  }
   staticStyle = Object.assign({}, staticStyle, showStyle);
   var type = Object.prototype.toString.call(styleBinding);
   if (type === '[object Object]') {
@@ -1588,6 +1593,9 @@ function bindNativeStyle (styleBinding, staticStyle, showStyle) {
 }
 
 /*  */
+/**
+ * Runtime helper for checking keyCodes.
+ */
 function checkKeyCodes (
   vm,
   eventKeyCode,
@@ -1764,6 +1772,9 @@ function dynamicComponent (vm, name) {
 
 /*  */
 
+/**
+ * Runtime helper for resolving filters
+ */
 function resolveFilter (id) {
   return resolveAsset(this.$options, 'filters', id, true) || identity
 }
@@ -2499,6 +2510,8 @@ Object.keys(reactProps).map(function (v) {
 
 /*  */
 
+// these are reserved for web because they are directly compiled away
+// during template compilation
 var isReservedAttr = makeMap('style,class');
 
 // attributes that should be using props for binding
@@ -3302,6 +3315,10 @@ function buildWebEmptyComponent (Component, createElement) {
     return EmptyComponent;
   }(Component))
 }
+
+// import {
+//   isObjectShallowModified
+// } from './util'
 
 function filterCollection (collection) {
   var result = [];
