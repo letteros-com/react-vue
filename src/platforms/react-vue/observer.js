@@ -32,6 +32,10 @@ export default function observer (componentClass) {
 
 function mixinLifecycleEvents (target) {
   for (const key in lifecycleMixin) {
+    if (key === 'shouldComponentUpdate' &&
+      typeof target.shouldComponentUpdate === 'function') {
+      continue
+    }
     patch(target, key)
   }
 }
@@ -48,6 +52,12 @@ const lifecycleMixin = {
   },
   componentWillUnmount () {
     this.$vuewatcher.teardown()
+  },
+  shouldComponentUpdate (nextProps, nextState) {
+    if (this.state !== nextState) {
+      return true
+    }
+    return isObjectShallowModified(this.props, nextProps)
   }
 }
 
@@ -55,14 +65,13 @@ function patch (target, funcName) {
   const base = target[funcName]
   const mixinFunc = lifecycleMixin[funcName]
   target[funcName] = !base ? function () {
-    mixinFunc.apply(this)
+    return mixinFunc.apply(this, arguments)
   } : function () {
-    mixinFunc.apply(this)
-    base.apply(this, arguments)
+    mixinFunc.apply(this, arguments)
+    return base.apply(this, arguments)
   }
 }
 
-/* Is it really necessary ?
 function isObjectShallowModified (prev, next) {
   if (prev == null || next == null || typeof prev !== 'object' || typeof next !== 'object') {
     return prev !== next
@@ -80,4 +89,3 @@ function isObjectShallowModified (prev, next) {
   }
   return false
 }
-*/
