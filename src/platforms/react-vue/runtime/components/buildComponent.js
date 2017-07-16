@@ -51,6 +51,7 @@ export function buildComponent (render, options, config) {
     }
 
     setRootRef (ref) {
+      console.log('ref', ref)
       if (ref) {
         ref = ref._ref || ref
         this._ref = ref
@@ -124,9 +125,7 @@ export function buildComponent (render, options, config) {
     }
 
     componentDidMount () {
-      setTimeout(() => {
-        this.mounted.forEach(v => v.call(this.vm))
-      }, 0)
+      this.vm.$nextTick(() => this.mounted.forEach(v => v.call(this.vm)))
     }
     componentWillUpdate () {
       this.beforeUpdate.forEach(v => v.call(this.vm))
