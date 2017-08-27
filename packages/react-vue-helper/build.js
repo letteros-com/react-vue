@@ -283,6 +283,10 @@ function def (obj, key, val, enumerable) {
   });
 }
 
+/**
+ * Parse simple path.
+ */
+
 var ASSET_TYPES = [
   'component',
   'directive',
@@ -495,7 +499,6 @@ function handleError (err, vm, info) {
 /*  */
 /* globals MutationObserver */
 
-// can we use __proto__?
 var hasProto = '__proto__' in {};
 
 // Browser environment sniffing
@@ -698,9 +701,6 @@ Dep.prototype.notify = function notify () {
   }
 };
 
-// the current target watcher being evaluated.
-// this is globally unique because there could be only one
-// watcher being evaluated at any time.
 Dep.target = null;
 
 /*
@@ -972,11 +972,6 @@ function dependArray (value) {
 
 /*  */
 
-/**
- * Option overwriting strategies are functions that handle
- * how to merge a parent option value and a child option
- * value into the final value.
- */
 var strats = config.optionMergeStrategies;
 
 /**
@@ -1155,8 +1150,7 @@ var defaultStrat = function (parentVal, childVal) {
 };
 
 /**
- * Merge two option objects into a new one.
- * Core utility used in both instantiation and inheritance.
+ * Validate component names
  */
 
 
@@ -1194,6 +1188,12 @@ function resolveAsset (
 }
 
 /*  */
+
+
+
+/**
+ * Get the default value of a prop.
+ */
 
 function setSelected (el, binding, vm) {
   var value = binding.value;
@@ -1273,9 +1273,6 @@ var index = {
 
 /*  */
 
-/**
- * Runtime helper for rendering v-for lists.
- */
 function renderList (
   val,
   render
@@ -1593,9 +1590,6 @@ function bindNativeStyle (styleBinding, staticStyle, showStyle) {
 }
 
 /*  */
-/**
- * Runtime helper for checking keyCodes.
- */
 function checkKeyCodes (
   vm,
   eventKeyCode,
@@ -1772,9 +1766,6 @@ function dynamicComponent (vm, name) {
 
 /*  */
 
-/**
- * Runtime helper for resolving filters
- */
 function resolveFilter (id) {
   return resolveAsset(this.$options, 'filters', id, true) || identity
 }
@@ -2510,8 +2501,6 @@ Object.keys(reactProps).map(function (v) {
 
 /*  */
 
-// these are reserved for web because they are directly compiled away
-// during template compilation
 var isReservedAttr = makeMap('style,class');
 
 // attributes that should be using props for binding
@@ -2783,9 +2772,7 @@ function buildComponent (render, options, config) {
     ReactVueComponent.prototype.componentDidMount = function componentDidMount () {
       var this$1 = this;
 
-      setTimeout(function () {
-        this$1.mounted.forEach(function (v) { return v.call(this$1.vm); });
-      }, 0);
+      this.vm.$nextTick(function () { return this$1.mounted.forEach(function (v) { return v.call(this$1.vm); }); });
     };
     ReactVueComponent.prototype.componentWillUpdate = function componentWillUpdate () {
       var this$1 = this;
@@ -3315,10 +3302,6 @@ function buildWebEmptyComponent (Component, createElement) {
     return EmptyComponent;
   }(Component))
 }
-
-// import {
-//   isObjectShallowModified
-// } from './util'
 
 function filterCollection (collection) {
   var result = [];

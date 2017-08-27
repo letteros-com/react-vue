@@ -477,6 +477,7 @@ function handleError (err, vm, info) {
 /*  */
 /* globals MutationObserver */
 
+// can we use __proto__?
 var hasProto = '__proto__' in {};
 
 // Browser environment sniffing
@@ -679,6 +680,9 @@ Dep.prototype.notify = function notify () {
   }
 };
 
+// the current target watcher being evaluated.
+// this is globally unique because there could be only one
+// watcher being evaluated at any time.
 Dep.target = null;
 var targetStack = [];
 
@@ -981,6 +985,11 @@ function dependArray (value) {
 
 /*  */
 
+/**
+ * Option overwriting strategies are functions that handle
+ * how to merge a parent option value and a child option
+ * value into the final value.
+ */
 var strats = config.optionMergeStrategies;
 
 /**
@@ -1758,6 +1767,18 @@ function checkProp (
 
 /*  */
 
+// The template compiler attempts to minimize the need for normalization by
+// statically analyzing the template at compile time.
+//
+// For plain HTML markup, normalization can be completely skipped because the
+// generated render function is guaranteed to return Array<VNode>. There are
+// two cases where extra normalization is needed:
+
+// 1. When the children contains components - because a functional component
+// may return an Array instead of a single root. In this case, just a simple
+// normalization is needed - if any child is an Array, we flatten the whole
+// thing with Array.prototype.concat. It is guaranteed to be only 1-level deep
+// because functional components already normalize their own children.
 function simpleNormalizeChildren (children) {
   for (var i = 0; i < children.length; i++) {
     if (Array.isArray(children[i])) {
@@ -2567,6 +2588,11 @@ Watcher.prototype.teardown = function teardown () {
   }
 };
 
+/**
+ * Recursively traverse an object to evoke all converted
+ * getters, so that every nested property inside the object
+ * is collected as a "deep" dependency.
+ */
 var seenObjects = new _Set();
 function traverse (val) {
   seenObjects.clear();
@@ -3032,6 +3058,7 @@ function mergeProps (to, from) {
 
 /*  */
 
+// hooks to be invoked on component VNodes during patch
 var componentVNodeHooks = {
   init: function init (
     vnode,
@@ -3350,16 +3377,39 @@ function applyNS (vnode, ns) {
 
 /*  */
 
-/*  */
+/**
+ * Runtime helper for rendering v-for lists.
+ */
 
 /*  */
 
-/*  */
+/**
+ * Runtime helper for rendering <slot>
+ */
 
 /*  */
 
+/**
+ * Runtime helper for resolving filters
+ */
+
 /*  */
 
+/**
+ * Runtime helper for checking keyCodes from config.
+ */
+
+/*  */
+
+/**
+ * Runtime helper for merging v-bind="object" into a VNode's data.
+ */
+
+/*  */
+
+/**
+ * Runtime helper for rendering static trees.
+ */
 
 
 /**
@@ -3523,6 +3573,14 @@ function dedupe (latest, sealed) {
   }
 }
 
+/**
+ * react-vue change
+ */
+// import { renderMixin } from './render'
+/**
+ * react-vue change
+ */
+// import { lifecycleMixin } from './lifecycle'
 function Vue$2 (options) {
   if (process.env.NODE_ENV !== 'production' &&
     !(this instanceof Vue$2)) {

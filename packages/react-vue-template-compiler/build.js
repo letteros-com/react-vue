@@ -3682,6 +3682,24 @@ function genCustomEventHandlers (
   return res
 }
 
+function genTransitionEventHandlers (
+  events,
+  options
+) {
+  var res = '';
+  for (var name in events) {
+    var handler = events[name];
+    var eventHandler = genTransitionEventHandler(name, handler);
+    if (name.indexOf('~') === 0) {
+      eventHandler = "this.setEventOnce(function once_" + (++uid) + "(event){(" + eventHandler + ")(event)})";
+    }
+    eventHandler = (COMMON.event.name) + "(" + eventHandler + ")";
+    res += "on" + (changeCase.pascalCase(addSeparateLine(name))) + ": " + eventHandler + ",";
+  }
+  res = res.replace(/,$/, '');
+  return res
+}
+
 function genHandler (
   name,
   handler
@@ -3781,6 +3799,29 @@ function genCustomHandler (
     }
     return ("function ($event) {" + code + handlerCode + "}.bind(this)")
   }
+}
+
+function genTransitionEventHandler (
+  name,
+  handler
+) {
+  if (!handler) {
+    return 'function(){}'
+  }
+
+  if (Array.isArray(handler)) {
+    return ("[" + (handler.map(function (handler) { return genTransitionEventHandler(name, handler); }).join(',')) + "]")
+  }
+
+  var isMethodPath = simplePathRE.test(handler.value);
+  var isFunctionExpression = fnExpRE.test(handler.value);
+
+  var handlerCode = isMethodPath
+    ? handler.value + '.apply(this, arguments)'
+    : isFunctionExpression
+      ? ("(" + (handler.value) + ").apply(this, arguments)")
+      : handler.value;
+  return ("function () {" + handlerCode + "}.bind(this)")
 }
 
 function genKeyFilter (keys) {
@@ -4289,7 +4330,11 @@ var ReactWebRenderGenerator = (function (RenderGenerator$$1) {
     var code = '';
     if (ast.events) {
       if (isReservedTag(ast.tag) || isBuildInTag(ast.tag)) {
-        code = genHandlers(ast.events, this.vueConfig);
+        if (ast.tag === WEB.transition.component) {
+          code = genTransitionEventHandlers(ast.events, this.vueConfig);
+        } else {
+          code = genHandlers(ast.events, this.vueConfig);
+        }
       } else {
         code = genCustomEventHandlers(ast.events, this.vueConfig);
         // code = Object.keys(ast.events).map(k => {

@@ -115,6 +115,24 @@ function genCustomEventHandlers (
   return res
 }
 
+function genTransitionEventHandlers (
+  events,
+  options
+) {
+  let res = ''
+  for (const name in events) {
+    const handler = events[name]
+    let eventHandler = genTransitionEventHandler(name, handler)
+    if (name.indexOf('~') === 0) {
+      eventHandler = `this.setEventOnce(function once_${++uid}(event){(${eventHandler})(event)})`
+    }
+    eventHandler = `${COMMON.event.name}(${eventHandler})`
+    res += `on${changeCase.pascalCase(addSeparateLine(name))}: ${eventHandler},`
+  }
+  res = res.replace(/,$/, '')
+  return res
+}
+
 function genHandler (
   name,
   handler
@@ -216,6 +234,29 @@ function genCustomHandler (
   }
 }
 
+function genTransitionEventHandler (
+  name,
+  handler
+) {
+  if (!handler) {
+    return 'function(){}'
+  }
+
+  if (Array.isArray(handler)) {
+    return `[${handler.map(handler => genTransitionEventHandler(name, handler)).join(',')}]`
+  }
+
+  const isMethodPath = simplePathRE.test(handler.value)
+  const isFunctionExpression = fnExpRE.test(handler.value)
+
+  const handlerCode = isMethodPath
+    ? handler.value + '.apply(this, arguments)'
+    : isFunctionExpression
+      ? `(${handler.value}).apply(this, arguments)`
+      : handler.value
+  return `function () {${handlerCode}}.bind(this)`
+}
+
 function genKeyFilter (keys) {
   return `if(!('button' in $event)&&${keys.map(genFilterCode).join('&&')})return null;`
 }
@@ -231,5 +272,6 @@ function genFilterCode (key) {
 
 export {
   genHandlers,
-  genCustomEventHandlers
+  genCustomEventHandlers,
+  genTransitionEventHandlers
 }

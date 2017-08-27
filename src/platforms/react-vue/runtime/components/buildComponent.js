@@ -51,7 +51,6 @@ export function buildComponent (render, options, config) {
     }
 
     setRootRef (ref) {
-      console.log('ref', ref)
       if (ref) {
         ref = ref._ref || ref
         this._ref = ref

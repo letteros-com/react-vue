@@ -12,7 +12,8 @@ import {
 } from '../constants'
 import {
   genHandlers,
-  genCustomEventHandlers
+  genCustomEventHandlers,
+  genTransitionEventHandlers
 } from '../modules/events'
 import parseStyleText from '../modules/style'
 import {
@@ -321,7 +322,11 @@ class ReactWebRenderGenerator extends RenderGenerator {
     let code = ''
     if (ast.events) {
       if (isReservedTag(ast.tag) || isBuildInTag(ast.tag)) {
-        code = genHandlers(ast.events, this.vueConfig)
+        if (ast.tag === WEB.transition.component) {
+          code = genTransitionEventHandlers(ast.events, this.vueConfig)
+        } else {
+          code = genHandlers(ast.events, this.vueConfig)
+        }
       } else {
         code = genCustomEventHandlers(ast.events, this.vueConfig)
         // code = Object.keys(ast.events).map(k => {

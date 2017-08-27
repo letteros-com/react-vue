@@ -1,3 +1,4 @@
+const path = require('path')
 const express = require('express')
 const webpack = require('webpack')
 const webpackDevMiddleware = require('webpack-dev-middleware')
@@ -9,7 +10,7 @@ const WebpackConfig = {
 
   entry: {
     build: './dev/react-vue/index.js',
-    vendor: ['react', 'react-dom', 'react-vue']
+    vendor: ['react', 'react-dom', 'react-vue', 'react-vue-helper']
   },
 
   output: {
@@ -42,7 +43,11 @@ const WebpackConfig = {
   },
 
   resolve: {
-    extensions: ['.vue', '.js']
+    extensions: ['.vue', '.js'],
+    alias: {
+      'react-vue': path.resolve(__dirname, 'packages/react-vue/build.js'),
+      'react-vue-helper': path.resolve(__dirname, 'packages/react-vue-helper/build.js')
+    }
   },
 
   // Expose __dirname to allow automatically setting basename.
