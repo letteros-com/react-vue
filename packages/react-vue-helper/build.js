@@ -3596,7 +3596,7 @@ function leave (ref) {
     });
   }
   onLeave && onLeave(el, _cb);
-  if (!expectsCSS && !userWantsControl) {
+  if (!expectsCSS && !userWantsControl && !onLeave) {
     _cb();
   }
 }
