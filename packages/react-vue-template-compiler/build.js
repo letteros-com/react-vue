@@ -3427,6 +3427,28 @@ var RenderGenerator = (function (BaseGenerator$$1) {
         code.push(key);
       }
     }
+    if (Array.isArray(ast.attrsList)) {
+      ast.attrsList.forEach(function (v) {
+        if (v.name === 'v-bind' && /^\{.*\}$/.test(v.value)) {
+          try {
+            var matchVArr = v.value.match(/^\{(.*)\}$/);
+            if (matchVArr && matchVArr[1]) {
+              matchVArr[1].split(',').forEach(function (_v) {
+                var _vArr = _v.split(':');
+                if (_vArr.length === 2) {
+                  ast.attrs.push({
+                    name: _vArr[0].trim().replace(/'|"/g, ''),
+                    value: _vArr[1].trim()
+                  });
+                }
+              });
+            }
+          } catch (e) {
+            console.log('parse error for v-bind obj');
+          }
+        }
+      });
+    }
     if (Array.isArray(ast.attrs)) {
       var props = ast.attrs
         .filter(function (v) {

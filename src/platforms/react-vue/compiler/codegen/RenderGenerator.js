@@ -286,6 +286,28 @@ class RenderGenerator extends BaseGenerator {
         code.push(key)
       }
     }
+    if (Array.isArray(ast.attrsList)) {
+      ast.attrsList.forEach(v => {
+        if (v.name === 'v-bind' && /^\{.*\}$/.test(v.value)) {
+          try {
+            const matchVArr = v.value.match(/^\{(.*)\}$/)
+            if (matchVArr && matchVArr[1]) {
+              matchVArr[1].split(',').forEach(_v => {
+                const _vArr = _v.split(':')
+                if (_vArr.length === 2) {
+                  ast.attrs.push({
+                    name: _vArr[0].trim(),
+                    value: _vArr[1].trim()
+                  })
+                }
+              })
+            }
+          } catch (e) {
+            console.log('parse error for v-bind obj')
+          }
+        }
+      })
+    }
     if (Array.isArray(ast.attrs)) {
       const props = ast.attrs
         .filter(v => {
