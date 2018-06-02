@@ -116,7 +116,11 @@ class ReactNativeRenderGenerator extends RenderGenerator {
       code.push(styleProps)
     }
 
-    return `style: [${code.join(',')}]`
+    if (code.length) {
+      return `style: [${code.join(',')}]`
+    } else {
+      return ''
+    }
   }
 
   /**

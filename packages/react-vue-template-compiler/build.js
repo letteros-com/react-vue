@@ -30,10 +30,6 @@ var changeCase = _interopDefault(require('change-case'));
  */
 
 
-/**
- * Strict object type check. Only returns true
- * for plain JavaScript objects.
- */
 
 
 /**
@@ -75,9 +71,6 @@ var isBuiltInTag = makeMap('slot,component', true);
  */
 
 
-/**
- * Check whether the object has the property.
- */
 
 
 /**
@@ -106,9 +99,6 @@ var capitalize = cached(function (str) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 });
 
-/**
- * Hyphenate a camelCase string.
- */
 
 
 /**
@@ -197,6 +187,7 @@ var isNonPhrasingTag = makeMap(
  * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
  */
 
+// Regular Expressions for parsing tags and attributes
 var singleAttrIdentifier = /([^\s"'<>/=]+)/;
 var singleAttrAssign = /(?:=)/;
 var singleAttrValues = [
@@ -1074,6 +1065,7 @@ function handleError (err, vm, info) {
 /*  */
 /* globals MutationObserver */
 
+// can we use __proto__?
 
 
 // Browser environment sniffing
@@ -2059,6 +2051,8 @@ var NATIVE = {
 
 /*  */
 
+// these are reserved for web because they are directly compiled away
+// during template compilation
 var isReservedAttr = makeMap('style,class');
 
 // attributes that should be using props for binding
@@ -3437,7 +3431,7 @@ var RenderGenerator = (function (BaseGenerator$$1) {
                 var _vArr = _v.split(':');
                 if (_vArr.length === 2) {
                   ast.attrs.push({
-                    name: _vArr[0].trim().replace(/'|"/g, ''),
+                    name: _vArr[0].trim(),
                     value: _vArr[1].trim()
                   });
                 }
@@ -3879,6 +3873,9 @@ function parseStyleText (cssText) {
 }
 
 /*  */
+
+// in some cases, the event used has to be determined at runtime
+// so we used some reserved tokens during compile.
 
 function model (
   el,
@@ -4497,7 +4494,11 @@ var ReactNativeRenderGenerator = (function (RenderGenerator$$1) {
       code.push(styleProps);
     }
 
-    return ("style: [" + (code.join(',')) + "]")
+    if (code.length) {
+      return ("style: [" + (code.join(',')) + "]")
+    } else {
+      return ''
+    }
   };
 
   /**
