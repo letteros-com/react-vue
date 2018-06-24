@@ -1433,12 +1433,13 @@ function renderSlot (names, children) {
   children = children.filter(function (v) { return v != null; });
   children.forEach(function (v) {
     if (v.type === COMMON.template.type) {
-      if (v['data-slot'] === undefined) {
+      if (v['dataSlot'] === undefined) {
         defaultSlot.push(v.render);
       }
       return
     }
-    if (v.props === undefined || v.props['data-slot'] === undefined) {
+    if (v.props === undefined ||
+      v.props['dataSlot'] === undefined) {
       defaultSlot.push(v);
     }
   });
@@ -1448,12 +1449,12 @@ function renderSlot (names, children) {
         return
       }
       if (_v.type === COMMON.template.type) {
-        if (v === _v['data-slot']) {
+        if (v === _v['dataSlot']) {
           hitSlot[v] = _v.render;
         }
         return
       }
-      if (v === _v.props['data-slot']) {
+      if (v === _v.props['dataSlot']) {
         hitSlot[v] = _v;
       }
       return
@@ -1733,10 +1734,10 @@ function getSlots (children) {
       slots.default = slots.default || [];
       slots.default.push(v);
     } else if (v.type === COMMON.template.type) {
-      slots[v['data-slot']] = slots[v['data-slot']] || [];
-      slots[v['data-slot']].push(v.render);
+      slots[v['dataSlot']] = slots[v['dataSlot']] || [];
+      slots[v['dataSlot']].push(v.render);
     } else if (v.props) {
-      var dataSlot = v.props['data-slot'];
+      var dataSlot = v.props['dataSlot'];
       if (dataSlot == null) {
         slots.default = slots.default || [];
         slots.default.push(v);

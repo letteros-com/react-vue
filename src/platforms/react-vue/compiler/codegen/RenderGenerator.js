@@ -127,7 +127,7 @@ class RenderGenerator extends BaseGenerator {
           const slotScope = v.slotScope
           const render = `render: (${slotScope}) => ${slotCode.trim()}`
           const type = `type: '${COMMON.template.type}'`
-          const slot = `'data-slot': ${v.slotTarget}`
+          const slot = `'dataSlot': ${v.slotTarget}`
           const code = `{${type},${render},${slot}}`
           return code
         }))
@@ -377,7 +377,7 @@ class RenderGenerator extends BaseGenerator {
   genSlotTarget (ast) {
     ast.attrs = ast.attrs || []
     ast.attrs.push({
-      name: 'data-slot',
+      name: 'dataSlot',
       value: ast.slotTarget
     })
   }

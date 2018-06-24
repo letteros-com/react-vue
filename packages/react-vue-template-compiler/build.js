@@ -3262,7 +3262,7 @@ var RenderGenerator = (function (BaseGenerator$$1) {
           var slotScope = v.slotScope;
           var render = "render: (" + slotScope + ") => " + (slotCode.trim());
           var type = "type: '" + (COMMON.template.type) + "'";
-          var slot = "'data-slot': " + (v.slotTarget);
+          var slot = "'dataSlot': " + (v.slotTarget);
           var code = "{" + type + "," + render + "," + slot + "}";
           return code
         }));
@@ -3506,7 +3506,7 @@ var RenderGenerator = (function (BaseGenerator$$1) {
   RenderGenerator.prototype.genSlotTarget = function genSlotTarget (ast) {
     ast.attrs = ast.attrs || [];
     ast.attrs.push({
-      name: 'data-slot',
+      name: 'dataSlot',
       value: ast.slotTarget
     });
   };
